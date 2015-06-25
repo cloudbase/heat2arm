@@ -117,10 +117,6 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
             }
         }
 
-        depends_on = {
-
-        }
-
         return [{
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
             "type": "Microsoft.Network/networkInterfaces",
