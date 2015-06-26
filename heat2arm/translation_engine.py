@@ -75,12 +75,8 @@ def validate_template_data(template_data):
 
 
 def get_resource_translator(heat_resource):
-    mapping = sys.modules[heat_resource.__module__].resource_mapping()
-    heat_resource_type = [k for (k, v) in mapping.items()
-                          if v is type(heat_resource)][0]
-
     rt = [rt for rt in RESOURCE_TRANSLATORS if
-          rt.heat_resource_type == heat_resource_type]
+          rt.heat_resource_type == heat_resource.type()]
 
     if rt:
         return rt[0](heat_resource)
