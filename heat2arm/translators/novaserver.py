@@ -71,8 +71,11 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
 
     def _get_ref_port_resource_names(self):
         port_resource_names = []
-        for port_data in self._heat_resource.properties.data["networks"]:
-            port_resource_names.append(port_data['port'].args)
+
+        if 'networks' in self._heat_resource.properties.data:
+            for port_data in self._heat_resource.properties.data["networks"]:
+                port_resource_names.append(port_data['port'].args)
+
         return port_resource_names
 
     def _get_network_interfaces(self):
