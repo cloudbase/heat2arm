@@ -15,7 +15,6 @@
 
 import collections
 import logging
-import sys
 
 import json
 import jsonschema
@@ -82,7 +81,7 @@ def get_resource_translator(heat_resource):
         return rt[0](heat_resource)
     else:
         LOG.warn('Could not find a corresponding ARM resource for Heat '
-                 'resource "%s"' % heat_resource_type)
+                 'resource "%s"' % heat_resource.type())
 
 
 def get_arm_schema():

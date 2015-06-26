@@ -61,12 +61,12 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
             self._heat_resource.properties['image'])
 
         return {
-            "vmName%s" % self._name: self._name,
-            "vmSize%s" % self._name: get_azure_flavor(
+            "vmName_%s" % self._name: self._name,
+            "vmSize_%s" % self._name: get_azure_flavor(
                 self._heat_resource.properties['flavor']),
-            "imgPublisher%s" % self._name: imgPublisher,
-            "imgOffer%s" % self._name: imgOffer,
-            "imgSku%s" % self._name: imgSku,
+            "imgPublisher_%s" % self._name: imgPublisher,
+            "imgOffer_%s" % self._name: imgOffer,
+            "imgSku_%s" % self._name: imgSku,
         }
 
     def _get_ref_port_resource_names(self):
@@ -80,13 +80,13 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         for port_resource_name in self._get_ref_port_resource_names():
             network_interfaces_data.append({
                 "id": "[resourceId('Microsoft.Network/networkInterfaces', "
-                      "variables('nicName%s'))]" % port_resource_name
+                      "variables('nicName_%s'))]" % port_resource_name
             })
         return network_interfaces_data
 
     def _get_vm_properties(self):
         os_profile_data = {
-            "computername": "[variables('vmName%s')]" % self._name,
+            "computername": "[variables('vmName_%s')]" % self._name,
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]"
         }
@@ -98,14 +98,14 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
 
         return {
             "hardwareProfile": {
-                "vmSize": "[variables('vmSize%s')]" % self._name
+                "vmSize": "[variables('vmSize_%s')]" % self._name
             },
             "osProfile": os_profile_data,
             "storageProfile": {
                 "imageReference": {
-                    "publisher": "[variables('imgPublisher%s')]" % self._name,
-                    "offer": "[variables('imgOffer%s')]" % self._name,
-                    "sku": "[variables('imgSku%s')]" % self._name,
+                    "publisher": "[variables('imgPublisher_%s')]" % self._name,
+                    "offer": "[variables('imgOffer_%s')]" % self._name,
+                    "sku": "[variables('imgSku_%s')]" % self._name,
                     "version": "latest"
                 },
                 "osDisk": {
@@ -115,7 +115,7 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
                         "parameters('newStorageAccountName'),"
                         "'.blob.core.windows.net/',variables("
                             "'vmStorageAccountContainerName'),'/',"
-                            "variables('vmName%s'),'_root.vhd')]" % self._name
+                            "variables('vmName_%s'),'_root.vhd')]" % self._name
                     },
                     "caching": "ReadWrite",
                     "createOption": "FromImage"
@@ -151,7 +151,7 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         for port_resource_name in self._get_ref_port_resource_names():
             depends_on.append(
                 "[concat('Microsoft.Network/networkInterfaces/', "
-                "variables('nicName%s'))]" % port_resource_name)
+                "variables('nicName_%s'))]" % port_resource_name)
 
         return depends_on
 
@@ -159,7 +159,7 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         resource_data = [{
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
             "type": self.arm_resource_type,
-            "name": "[variables('vmName%s')]" % self._heat_resource.name,
+            "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
             "properties": self._get_vm_properties(),
             "dependsOn": self.get_dependencies(),

@@ -29,16 +29,16 @@ class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
 
     def get_variables(self):
         return {
-            "virtualNetworkName%s" % self._name: self._name,
-            "virtualNetworkSubnetName%s" % self._name:
+            "virtualNetworkName_%s" % self._name: self._name,
+            "virtualNetworkSubnetName_%s" % self._name:
             "%s_subnet1" % self._name,
             "virtualNetworkName_ref_%s" % self._name:
             "[resourceId('Microsoft.Network/virtualNetworks', "
-            "variables('virtualNetworkName%s'))]" % self._name,
+            "variables('virtualNetworkName_%s'))]" % self._name,
             "virtualNetworkSubnetName_ref_%s" % self._name:
             "[concat(variables('virtualNetworkName_ref_%(net_name)s'),"
-            "'/subnets/',variables('virtualNetworkSubnetName%(net_name)s'))]" %
-            {"net_name": self._name}
+            "'/subnets/',variables('virtualNetworkSubnetName_%(net_name)s'))]"
+            % {"net_name": self._name}
         }
 
 
@@ -48,7 +48,7 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
     def get_variables(self):
         cidr = self._heat_resource.properties['cidr']
         return {
-            "subNetAddressPrefix%s" % self._name: cidr
+            "subNetAddressPrefix_%s" % self._name: cidr
         }
 
     def get_resource_data(self):
@@ -60,13 +60,13 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
             "type": "Microsoft.Network/virtualNetworks",
             "name":
-            "[variables('virtualNetworkName%s')]" % net_name,
+            "[variables('virtualNetworkName_%s')]" % net_name,
             "location": "[variables('location')]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
                         # TODO: support multiple subnets
-                        "[variables('subNetAddressPrefix%s')]" % self._name
+                        "[variables('subNetAddressPrefix_%s')]" % self._name
                     ]
                 },
                 "subnets": [{
@@ -75,10 +75,10 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
                     # reference to a subnet, while a Neutron port contains a
                     # reference to a network
                     "name":
-                    "[variables('virtualNetworkSubnetName%s')]" % net_name,
+                    "[variables('virtualNetworkSubnetName_%s')]" % net_name,
                     "properties": {
                         "addressPrefix":
-                        "[variables('subNetAddressPrefix%s')]" % self._name
+                        "[variables('subNetAddressPrefix_%s')]" % self._name
                     }
                 }]
             }
@@ -90,7 +90,7 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
 
     def get_variables(self):
         return {
-            "nicName%s" % self._name: self._name,
+            "nicName_%s" % self._name: self._name,
         }
 
     def _get_floating_ip_resource_name(self):
@@ -110,7 +110,7 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
 
         dependencies = [
             "[concat('Microsoft.Network/virtualNetworks/', "
-            "variables('virtualNetworkName%s'))]" % net_name
+            "variables('virtualNetworkName_%s'))]" % net_name
         ]
 
         if floating_ip_resource_name:
@@ -147,7 +147,7 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
         return [{
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicName%s')]" % self._name,
+            "name": "[variables('nicName_%s')]" % self._name,
             "location": "[variables('location')]",
             "dependsOn": self.get_dependencies(),
             "properties": {
