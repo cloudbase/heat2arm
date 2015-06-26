@@ -93,15 +93,34 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
             "nicName%s" % self._name: self._name,
         }
 
+    def _get_floating_ip_resource_name(self):
+        for heat_resource in self._heat_resource.stack.iter_resources():
+            if heat_resource.type() == "OS::Neutron::FloatingIP":
+                port_resource = base.get_ref_heat_resource(
+                    heat_resource, 'port_id')
+                if port_resource is self._heat_resource:
+                    return heat_resource.name
+
     def get_dependencies(self):
+        floating_ip_resource_name = self._get_floating_ip_resource_name()
+
         heat_net_resource = base.get_ref_heat_resource(
             self._heat_resource, "network_id")
         net_name = heat_net_resource.name
 
-        return [
+        dependencies = [
             "[concat('Microsoft.Network/virtualNetworks/', "
             "variables('virtualNetworkName%s'))]" % net_name
         ]
+
+        if floating_ip_resource_name:
+            dependencies.append(
+                "[concat('Microsoft.Network/publicIPAddresses/', "
+                "variables('publicIPAddressName_%s'))]" %
+                floating_ip_resource_name
+            )
+
+        return dependencies
 
     def get_resource_data(self):
         heat_net_resource = base.get_ref_heat_resource(
@@ -116,6 +135,14 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
                 "[variables('virtualNetworkSubnetName_ref_%s')]" % net_name
             }
         }
+
+        floating_ip_resource_name = self._get_floating_ip_resource_name()
+        if floating_ip_resource_name:
+            nic_properties_data["publicIPAddress"] = {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', "
+                      "variables('publicIPAddressName_%s'))]" %
+                floating_ip_resource_name
+            }
 
         return [{
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
@@ -134,6 +161,37 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
 
 class NeutronFloatingIPARMTranslator(base.BaseHeatARMTranslator):
     heat_resource_type = "OS::Neutron::FloatingIP"
+
+    def get_parameters(self):
+        return {
+            "dnsNameForPublicIP_%s" % self._name: {
+                "type": "string",
+                "metadata": {
+                    "description": "Unique DNS name for public IP address."
+                }
+            },
+        }
+
+    def get_variables(self):
+        return {
+            "publicIPAddressName_%s" % self._name: self._name,
+        }
+
+    def get_resource_data(self):
+        return [{
+            "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName_%s')]" % self._name,
+            "location": "[variables('location')]",
+            "properties": {
+                # TODO: Add support for static IPs
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel":
+                    "[parameters('dnsNameForPublicIP_%s')]" % self._name
+                    }
+                }
+            }]
 
 
 class NeutronRouterARMTranslator(base.BaseHeatARMTranslator):
