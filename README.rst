@@ -13,5 +13,7 @@ Usage sample
 The generated ARM template is now ready for deployment on Azure, e.g.:
 
     azure login -u <your organizational ID email address>
+
     azure config mode arm
+
     azure group deployment create "testDeploy" -g "testResourceGroup" --template-file azuredeploy.json
