@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import sys
+import warnings
 
 from oslo_config import cfg
 import yaml
@@ -59,6 +60,8 @@ def _setup_logging():
     streamformat = "%(levelname)s (%(module)s:%(lineno)d) %(message)s"
     logging.basicConfig(level=logging.WARNING,
                         format=streamformat)
+    # Disable Heat warnings
+    warnings.simplefilter("ignore")
 
 
 def main():
@@ -75,7 +78,6 @@ def main():
 
     args.arm_template.write(json.dumps(arm_template_data, indent=4))
     args.arm_template.close()
-
 
 if __name__ == "__main__":
     main()
