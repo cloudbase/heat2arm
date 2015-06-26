@@ -1,0 +1,6 @@
+pbr>=0.10,<1.0
+heat
+oslo.config
+PyYAML
+jsonschema
+requests
