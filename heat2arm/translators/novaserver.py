@@ -43,7 +43,7 @@ opts = [
         'vm_image_map',
         default={
             'ubuntu.12.04.LTS.x86_64':
-            "Canonical,UbuntuServer,12.04.5-LTS",
+            "Canonical;UbuntuServer;12.04.5-LTS",
         },
         help='A map between OpenStack Nova and Azure VM images'),
 ]
@@ -179,10 +179,10 @@ def get_azure_image_info(nova_image):
             'Nova image "%s" cannot be mapped to an Azure equivalent. Please '
             'update the "vm_image_map" configuration option' % nova_image)
 
-    azure_image_info = tuple(azure_image_info_str.split(","))
+    azure_image_info = tuple(azure_image_info_str.split(";"))
     if len(azure_image_info) != 3:
         raise Exception(
             '"%s" does not contain valid Azure image data. The required '
-            'format is "publisher,offer,sku"')
+            'format is "publisher;offer;sku"')
 
     return azure_image_info

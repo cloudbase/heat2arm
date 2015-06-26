@@ -14,16 +14,18 @@
 #    under the License.
 
 import argparse
+import json
 import logging
 import os
 import sys
 
-import json
+from oslo_config import cfg
 import yaml
 
 from heat2arm import translation_engine as engine
 
 LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
 
 
 def _open_file_read(parser, arg):
@@ -47,6 +49,9 @@ def _parse_args():
                         help="Optional Azure ARM template output path",
                         type=lambda x: _open_file_write(parser, x),
                         default=sys.stdout)
+    parser.add_argument("--config-file",
+                        help="Path to an optional configuration file",
+                        type=str)
     return parser.parse_args()
 
 
@@ -60,6 +65,8 @@ def main():
     _setup_logging()
 
     args = _parse_args()
+    if args.config_file:
+        CONF(["--config-file", args.config_file])
 
     heat_template_data = yaml.load(args.heat_template, Loader=yaml.BaseLoader)
     args.heat_template.close()
