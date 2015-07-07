@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+    Contains all the basic layout of the translation engine.
+"""
+
 import collections
 import logging
 
@@ -30,7 +34,10 @@ from heat2arm import constants
 from heat2arm.translators import neutron
 from heat2arm.translators import novaserver
 
-opts = [
+LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
+CONF.register_opts([
     cfg.StrOpt(
         'default_azure_location',
         default="West US",
@@ -48,12 +55,7 @@ opts = [
         'validate_arm_template_schema',
         default=False,
         help='Validate the generated ARM template schema'),
-]
-
-LOG = logging.getLogger(__name__)
-
-CONF = cfg.CONF
-CONF.register_opts(opts)
+])
 
 DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
@@ -69,28 +71,39 @@ RESOURCE_TRANSLATORS = [
 
 
 def validate_template_data(template_data):
+    """ validate_template_data validates the given template against the ARM
+    schema obtained through calling get_arm_schema.
+    """
     schema = get_arm_schema()
     jsonschema.validate(template_data, schema)
 
 
 def get_resource_translator(heat_resource):
-    rt = [rt for rt in RESOURCE_TRANSLATORS if
-          rt.heat_resource_type == heat_resource.type()]
+    """ get_resource_translator runs through all the available trainslators and
+    finds the appropriate one for the given heat resource type or logs a
+    warning message if no translator is available.
+    """
+    res_trans = [rt for rt in RESOURCE_TRANSLATORS if
+                 rt.heat_resource_type == heat_resource.type()]
 
-    if rt:
-        return rt[0](heat_resource)
+    if res_trans:
+        return res_trans[0](heat_resource)
     else:
         LOG.warn('Could not find a corresponding ARM resource for Heat '
-                 'resource "%s"' % heat_resource.type())
+                 'resource "%s"', heat_resource.type())
 
 
 def get_arm_schema():
+    """ get_arm_schema fetches the ARM schema from its default URL. """
     response = requests.get(constants.ARM_SCHEMA_URL)
     response.raise_for_status()
     return json.loads(response.text)
 
 
 def get_arm_template(resources, location=CONF.default_azure_location):
+    """ get_arm_template takes a list of resources and returns a dict which is
+    directly renderable into the JSON of an ARM template.
+    """
     parameters_data = collections.OrderedDict()
     variables_data = collections.OrderedDict({
         "location": location,
@@ -124,12 +137,16 @@ def get_arm_template(resources, location=CONF.default_azure_location):
 
 
 def get_storage_account_resource():
+    """ get_storage_account_resource returns the
+    (parameters, variables, resource) touple associated to the storage account
+    which will be created on Azure for any storage-related operations.
+    """
     parameters = {
         "newStorageAccountName": {
             "type": "string",
             "metadata": {
                 "description": "Unique DNS Name for the Storage Account where "
-                "the Virtual Machine's disks will be placed."
+                               "the Virtual Machine's disks will be placed."
             }
         },
     }
@@ -152,19 +169,22 @@ def get_storage_account_resource():
 
 
 def convert_template(heat_template_data):
-    t = template.Template(heat_template_data)
-    t.validate()
+    """ convert_template takes a heat template and converts it into an ARM
+    template.
+    """
+    temp = template.Template(heat_template_data)
+    temp.validate()
 
     ctx = test_utils.dummy_context()
 
-    s = stack.Stack(context=ctx, stack_name="Dummy", tmpl=t)
-    t.validate_resource_definitions(s)
+    heat_stack = stack.Stack(context=ctx, stack_name="Dummy", tmpl=temp)
+    temp.validate_resource_definitions(heat_stack)
 
     arm_resources = []
-    for heat_resource in s.iter_resources():
-        rt = get_resource_translator(heat_resource)
-        if rt:
-            arm_resources.append(rt)
+    for heat_resource in heat_stack.iter_resources():
+        res_trans = get_resource_translator(heat_resource)
+        if res_trans:
+            arm_resources.append(res_trans)
 
     arm_template_data = get_arm_template(arm_resources)
     if CONF.validate_arm_template_schema:

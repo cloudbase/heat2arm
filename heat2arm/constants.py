@@ -13,6 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+    General constants.
+"""
+
+# ARM_API_2015_05_01_PREVIEW is the version of the ARM API to be used:
 ARM_API_2015_05_01_PREVIEW = "2015-05-01-preview"
+
+# ARM_SCHEMA_URL is the default URL for fetching the ARM template JSON schema:
 ARM_SCHEMA_URL = ("https://schema.management.azure.com/schemas/"
                   "2015-01-01/deploymentTemplate.json#")

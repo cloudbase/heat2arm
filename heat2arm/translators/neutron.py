@@ -13,6 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+    Defines translators for mapping Neutron
+    networking resources to Azure ones.
+"""
+
 from heat2arm import constants
 from heat2arm.translators import base
 
@@ -23,6 +28,12 @@ https://azure.microsoft.com/en-gb/documentation/articles/resource-groups-network
 
 
 class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronNetARMTranslator is the translator for Neutron networks.
+
+    Despite not having a direct stand-alone equivalent;
+    Neutron networks can be modeled as Azure virtual
+    networks together with some additional sub-components.
+    """
     # No direct ARM resource translation
     # Azure virtual networks encompass both Neutron networks and subnets
     heat_resource_type = "OS::Neutron::Net"
@@ -43,15 +54,32 @@ class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
 
 
 class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronSubnetARMTranslator is the translator associated
+    to a Neutron subnet.
+
+    Because of the way Azure handles subnets (as being an integral part of a
+    vitual network); this translator is used merely as a helper for the main
+    NeutronNetARMTranslator.
+    """
     heat_resource_type = "OS::Neutron::Subnet"
+    # NOTE: will not be mapped into an ARM resource.
+    arm_resource_type = None
 
     def get_variables(self):
+        """ get_variables resurns the dict of ARM template
+        variables associated with the Neutron subnet.
+
+        """
         cidr = self._heat_resource.properties['cidr']
         return {
             "subNetAddressPrefix_%s" % self._name: cidr
         }
 
     def get_resource_data(self):
+        """ get_resource_data retuns the list of all characteristics
+        representing the subnet which can be directly serialized into
+        the ARM template format.
+        """
         heat_net_resource = base.get_ref_heat_resource(
             self._heat_resource, "network_id")
         net_name = heat_net_resource.name
@@ -86,14 +114,24 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
 
 
 class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronPortARMTranslator is the translator associated to Neutron port.
+    """
     heat_resource_type = "OS::Neutron::Port"
+    # NOTE: will not be mapped into an ARM resource.
+    arm_resource_type = None
 
     def get_variables(self):
+        """ get_variables returns a dict of ARM template variables associated
+        to this port.
+        """
         return {
             "nicName_%s" % self._name: self._name,
         }
 
     def _get_floating_ip_resource_name(self):
+        """ _get_floating_ip_resource_name is a helper method which returns the
+        name of the Neutron Floating IP pool associated to the port resource.
+        """
         for heat_resource in self._heat_resource.stack.iter_resources():
             if heat_resource.type() == "OS::Neutron::FloatingIP":
                 port_resource = base.get_ref_heat_resource(
@@ -102,6 +140,9 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
                     return heat_resource.name
 
     def get_dependencies(self):
+        """ get_dependencies returns a list of all the dependencies
+        of the Neutron port.
+        """
         floating_ip_resource_name = self._get_floating_ip_resource_name()
 
         heat_net_resource = base.get_ref_heat_resource(
@@ -123,6 +164,9 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
         return dependencies
 
     def get_resource_data(self):
+        """ get_resource_data returns the list of data associated to the port
+        which is directly serializable into ARM template format.
+        """
         heat_net_resource = base.get_ref_heat_resource(
             self._heat_resource, "network_id")
         net_name = heat_net_resource.name
@@ -141,7 +185,7 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
             nic_properties_data["publicIPAddress"] = {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', "
                       "variables('publicIPAddressName_%s'))]" %
-                floating_ip_resource_name
+                      floating_ip_resource_name
             }
 
         return [{
@@ -160,9 +204,17 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
 
 
 class NeutronFloatingIPARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronFloatingIPARMTranslator is the translator associated to a
+    Neutron floating IP range.
+    """
     heat_resource_type = "OS::Neutron::FloatingIP"
+    # NOTE: will not be mapped into an ARM resource.
+    arm_resource_type = None
 
     def get_parameters(self):
+        """ get_parameters returns a dict of all the parameters associated
+        to the Neutron floating IP.
+        """
         return {
             "dnsNameForPublicIP_%s" % self._name: {
                 "type": "string",
@@ -173,11 +225,18 @@ class NeutronFloatingIPARMTranslator(base.BaseHeatARMTranslator):
         }
 
     def get_variables(self):
+        """ get_variables returns a dict of ARM template variables associated
+        with the Neutron Floating IP's translation.
+        """
         return {
             "publicIPAddressName_%s" % self._name: self._name,
         }
 
     def get_resource_data(self):
+        """ get_resource_data returns a list of all the characterisics
+        respresenting the resource which can directly be serialized
+        into the resulting ARM template format.
+        """
         return [{
             "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
             "type": "Microsoft.Network/publicIPAddresses",
@@ -195,10 +254,19 @@ class NeutronFloatingIPARMTranslator(base.BaseHeatARMTranslator):
 
 
 class NeutronRouterARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronRouterARMTranslator is the translator for a Neutron router.
+
+    It has no direct Azure equivalent; so its translation is thus empty.
+    """
     # No direct ARM resource translation
     heat_resource_type = "OS::Neutron::Router"
 
 
 class NeutronRouterInterfaceARMTranslator(base.BaseHeatARMTranslator):
+    """ NeutronRouterInterfaceARMTranslator is the translator
+    for a Neutron router resource.
+
+    It has no direct Azure equivalent; so its translation is thus empty.
+    """
     # No direct ARM resource translation
     heat_resource_type = "OS::Neutron::RouterInterface"
