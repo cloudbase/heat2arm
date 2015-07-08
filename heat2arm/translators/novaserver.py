@@ -25,6 +25,8 @@ from oslo_config import cfg
 
 from heat2arm import constants
 from heat2arm.translators import base
+from heat2arm.translators.instance_utils import get_azure_flavor
+from heat2arm.translators.instance_utils import get_azure_image_info
 
 LOG = logging.getLogger(__name__)
 
@@ -60,50 +62,25 @@ CONF.register_opts([
 ])
 
 
-def get_azure_flavor(nova_flavor):
-    """ get_azure_flavor is a helper funcion which returns the appropriate
-    Azure VM size corresponding to the given Nova flavor or a sensible default.
-    """
-    return CONF.vm_flavor_size_map.get(nova_flavor, CONF.vm_default_size)
-
-
-def get_azure_image_info(nova_image):
-    """ get_azure_image_info is a helper function which returns
-    the info of the image. """
-    azure_image_info_str = CONF.vm_image_map.get(nova_image)
-    if not azure_image_info_str:
-        raise Exception(
-            'Nova image "%s" cannot be mapped to an Azure equivalent. Please '
-            'update the "vm_image_map" configuration option' % nova_image)
-
-    azure_image_info = tuple(azure_image_info_str.split(";"))
-    if len(azure_image_info) != 3:
-        raise Exception(
-            '"%s" does not contain valid Azure image data. The required '
-            'format is "publisher;offer;sku"')
-
-    return azure_image_info
-
-
 class NovaServerARMTranslator(base.BaseHeatARMTranslator):
     """ NovaServerARMTranslator is the translator associated to a Nova server.
 
-    It processes the fields and parameters of a Nova server.
+    It processes the fields and parameters of a Nova server defined in Heat.
     """
     heat_resource_type = "OS::Nova::Server"
     arm_resource_type = "Microsoft.Compute/virtualMachines"
 
     def get_variables(self):
         """ get_variables returns the dict of ARM template variables
-        associated with the Heat template's translation.
+        associated with the Heat template's resource translation.
         """
         (publisher, offer, sku) = get_azure_image_info(
-            self._heat_resource.properties['image'])
+            CONF, self._heat_resource.properties['image'])
 
         return {
             "vmName_%s" % self._name: self._name,
             "vmSize_%s" % self._name: get_azure_flavor(
-                self._heat_resource.properties['flavor']),
+                CONF, self._heat_resource.properties['flavor']),
             "imgPublisher_%s" % self._name: publisher,
             "imgOffer_%s" % self._name: offer,
             "imgSku_%s" % self._name: sku,
@@ -183,7 +160,7 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
 
     def get_parameters(self):
         """ get_parameters returns the dict of ARM template parameters
-        associated with the Heat template's translation.
+        associated with the Heat template's resource translation.
         """
         return {
             "adminUsername": {
