@@ -23,10 +23,8 @@ import logging
 import json
 from oslo_config import cfg
 
-from heat2arm import constants
-from heat2arm.translators import base
-from heat2arm.translators.instance_utils import get_azure_flavor
-from heat2arm.translators.instance_utils import get_azure_image_info
+from heat2arm.translators.instances.base import BaseInstanceARMTranslator
+from heat2arm.translators.instances import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -51,7 +49,6 @@ CONF.register_opts([
         help='Default Azure size in case an OpenStack Nova flavor '
              'could not be mapped'),
     # Mapping between Nova image names and Azure images:
-    # TODO: ideally; find a way to auto-fetch these...
     cfg.DictOpt(
         'vm_image_map',
         default={
@@ -62,7 +59,7 @@ CONF.register_opts([
 ])
 
 
-class NovaServerARMTranslator(base.BaseHeatARMTranslator):
+class NovaServerARMTranslator(BaseInstanceARMTranslator):
     """ NovaServerARMTranslator is the translator associated to a Nova server.
 
     It processes the fields and parameters of a Nova server defined in Heat.
@@ -74,12 +71,12 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         """ get_variables returns the dict of ARM template variables
         associated with the Heat template's resource translation.
         """
-        (publisher, offer, sku) = get_azure_image_info(
+        (publisher, offer, sku) = utils.get_azure_image_info(
             CONF, self._heat_resource.properties['image'])
 
         return {
             "vmName_%s" % self._name: self._name,
-            "vmSize_%s" % self._name: get_azure_flavor(
+            "vmSize_%s" % self._name: utils.get_azure_flavor(
                 CONF, self._heat_resource.properties['flavor']),
             "imgPublisher_%s" % self._name: publisher,
             "imgOffer_%s" % self._name: offer,
@@ -116,66 +113,24 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         """ _get_vm_properties is a helper method which returns the dict with
         all the auxiliary properties associated to the machine:
         """
-        os_profile_data = {
-            "computername": "[variables('vmName_%s')]" % self._name,
-            "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminPassword')]"
-        }
+        os_profile_data = self._get_base_os_profile_data()
 
         user_data = self._heat_resource.properties['user_data']
         if user_data:
             os_profile_data["customData"] = (
                 "[base64('%s')]" % json.dumps(user_data))
 
-        return {
-            "hardwareProfile": {
-                "vmSize": "[variables('vmSize_%s')]" % self._name
-            },
+        vm_properties = self._get_base_vm_properties()
+        vm_properties.update({
             "osProfile": os_profile_data,
-            "storageProfile": {
-                "imageReference": {
-                    "publisher": "[variables('imgPublisher_%s')]" % self._name,
-                    "offer": "[variables('imgOffer_%s')]" % self._name,
-                    "sku": "[variables('imgSku_%s')]" % self._name,
-                    "version": "latest"
-                },
-                "osDisk": {
-                    "name": "osdisk",
-                    "vhd": {
-                        "uri": "[concat('http://',"
-                               "parameters('newStorageAccountName'),"
-                               "'.blob.core.windows.net/',variables("
-                               "'vmStorageAccountContainerName'),'/',"
-                               "variables('vmName_%s'),'_root.vhd')]" %
-                               self._name
-                    },
-                    "caching": "ReadWrite",
-                    "createOption": "FromImage"
-                }
-            },
             "networkProfile": {
                 "networkInterfaces": self._get_network_interfaces()
             }
-        }
+        })
 
-    def get_parameters(self):
-        """ get_parameters returns the dict of ARM template parameters
-        associated with the Heat template's resource translation.
-        """
-        return {
-            "adminUsername": {
-                "type": "string",
-                "metadata": {
-                    "description": "User name for the Virtual Machine."
-                }
-            },
-            "adminPassword": {
-                "type": "securestring",
-                "metadata": {
-                    "description": "Password for the Virtual Machine."
-                }
-            },
-        }
+        return vm_properties
+
+    # NOTE: get_parameters is inherited from BaseInstanceARMTranslator.
 
     def get_dependencies(self):
         """ get_dependencies returns the list of resources which are required
@@ -194,13 +149,14 @@ class NovaServerARMTranslator(base.BaseHeatARMTranslator):
         return depends_on
 
     def get_resource_data(self):
-        resource_data = [{
-            "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
-            "type": self.arm_resource_type,
-            "name": "[variables('vmName_%s')]" % self._heat_resource.name,
-            "location": "[variables('location')]",
+        """ get_resource_data returns a list of all the options associated to
+        this resource which is directly serializable into JSON and used in the
+        resulting ARM template for this resource.
+        """
+        resource_data = self._get_base_vm_header()
+        resource_data.update({
             "properties": self._get_vm_properties(),
             "dependsOn": self.get_dependencies(),
-        }]
+        })
 
-        return resource_data
+        return [resource_data]

@@ -31,8 +31,11 @@ from heat.engine import template
 from heat.tests import utils as test_utils
 
 from heat2arm import constants
-from heat2arm.translators import neutron
-from heat2arm.translators import novaserver
+from heat2arm.translators.instances import novaserver
+from heat2arm.translators.networking import neutron_floating_ip
+from heat2arm.translators.networking import neutron_net, neutron_port
+from heat2arm.translators.networking import neutron_router
+
 
 LOG = logging.getLogger(__name__)
 
@@ -61,13 +64,13 @@ DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
 RESOURCE_TRANSLATORS = [
     novaserver.NovaServerARMTranslator,
-    neutron.NeutronNetARMTranslator,
-    neutron.NeutronSubnetARMTranslator,
-    neutron.NeutronPortARMTranslator,
-    neutron.NeutronFloatingIPARMTranslator,
-    neutron.NeutronRouterARMTranslator,
-    neutron.NeutronRouterInterfaceARMTranslator
-    ]
+    neutron_router.NeutronRouterARMTranslator,
+    neutron_router.NeutronRouterInterfaceARMTranslator,
+    neutron_floating_ip.NeutronFloatingIPARMTranslator,
+    neutron_net.NeutronNetARMTranslator,
+    neutron_net.NeutronSubnetARMTranslator,
+    neutron_port.NeutronPortARMTranslator,
+]
 
 
 def validate_template_data(template_data):
