@@ -25,8 +25,10 @@ from heat2arm.translators.base import BaseHeatARMTranslator
 class BaseInstanceARMTranslator(BaseHeatARMTranslator):
     """ BaseInstanceARMTranslator is a specialised version of the
     BaseHeatARMTranslator which provides some sensible default
-    implementations to facilitate iiheriting instance translators.
+    implementations to facilitate inheriting instance translators.
     """
+    arm_resource_type = "Microsoft.Compute/virtualMachines"
+
     def get_parameters(self):
         """ get_parameters is a sensible override of the method of the Base
         translator for fetching the parameters of the ARM translation.

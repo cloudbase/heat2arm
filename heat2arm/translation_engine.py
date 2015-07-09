@@ -31,7 +31,7 @@ from heat.engine import template
 from heat.tests import utils as test_utils
 
 from heat2arm import constants
-from heat2arm.translators.instances import novaserver
+from heat2arm.translators.instances import nova_server
 from heat2arm.translators.networking import neutron_floating_ip
 from heat2arm.translators.networking import neutron_net, neutron_port
 from heat2arm.translators.networking import neutron_router
@@ -63,7 +63,7 @@ CONF.register_opts([
 DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
 RESOURCE_TRANSLATORS = [
-    novaserver.NovaServerARMTranslator,
+    nova_server.NovaServerARMTranslator,
     neutron_router.NeutronRouterARMTranslator,
     neutron_router.NeutronRouterInterfaceARMTranslator,
     neutron_floating_ip.NeutronFloatingIPARMTranslator,

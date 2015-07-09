@@ -23,7 +23,9 @@ import logging
 import json
 from oslo_config import cfg
 
-from heat2arm.translators.instances.base import BaseInstanceARMTranslator
+from heat2arm.translators.instances.base_instance import (
+    BaseInstanceARMTranslator
+)
 from heat2arm.translators.instances import utils
 
 LOG = logging.getLogger(__name__)
@@ -65,7 +67,6 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
     It processes the fields and parameters of a Nova server defined in Heat.
     """
     heat_resource_type = "OS::Nova::Server"
-    arm_resource_type = "Microsoft.Compute/virtualMachines"
 
     def get_variables(self):
         """ get_variables returns the dict of ARM template variables
