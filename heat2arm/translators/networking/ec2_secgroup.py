@@ -41,7 +41,7 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                     "SecurityGroupIngress"]:
                 # build the rule:
                 rule = {
-                    "name": "secGroupRule_%d" % i,
+                    "name": "%s_rule_%d" % (self._name, i),
                     "properties": {
                         "protocol": in_rule["IpProtocol"],
                         "sourcePortRange": in_rule["FromPort"],
@@ -57,18 +57,18 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                 i = i + 1
                 rules.append(rule)
 
-        # traverse all ingress rules; if any:
+        # traverse all egress rules; if any:
         if "SecurityGroupEgress" in self._heat_resource.properties.data:
-            for in_rule in self._heat_resource.properties.data[
+            for out_rule in self._heat_resource.properties.data[
                     "SecurityGroupEgress"]:
                 # build the rule:
                 rule = {
-                    "name": "secGroupRule_%d" % i,
+                    "name": "%s_rule_%d" % (self._name, i),
                     "properties": {
-                        "protocol": in_rule["IpProtocol"],
-                        "sourcePortRange": in_rule["FromPort"],
-                        "destionationPortRange": in_rule["ToPort"],
-                        "sourceAddressPrefix": in_rule["CidrIp"],
+                        "protocol": out_rule["IpProtocol"],
+                        "sourcePortRange": out_rule["FromPort"],
+                        "destionationPortRange": out_rule["ToPort"],
+                        "sourceAddressPrefix": out_rule["CidrIp"],
                         "destinationAddressPrefix": "*",
                         "access": "Outbound",
                         # NOTE: priority is always fixed.
@@ -80,42 +80,3 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                 rules.append(rule)
 
         return rules
-
-    def get_variables(self):
-        """ get_variables returns the dict of all the required ARM
-        template variables for the EC2 security group.
-        """
-        return {
-            self._make_var_name("secGroupName"): self._name,
-        }
-
-    def get_parameters(self):
-        """ get_parameters returns the dict of ARM template parameters
-        associated with the EC2 security group.
-
-        It is no-op as there usually are no parameters for
-        EC2 security groups.
-        """
-        return {}
-
-    def get_dependencies(self):
-        """ get_dependencies returns a list of resources which this resource
-        depends on.
-
-        It is no-op as Azure security groups are fully stand-alone resources.
-        """
-        return []
-
-    def get_resource_data(self):
-        """ get_resource_data returns a list of all the options associated to
-        this resource which is directly serializable into JSON and used in the
-        resulting ARM template for this resource.
-        """
-        resource_data = self._get_base_secgroup_header()
-        resource_data.update({
-            "properties": {
-                "securityRules": self._get_rules()
-            }
-        })
-
-        return [resource_data]

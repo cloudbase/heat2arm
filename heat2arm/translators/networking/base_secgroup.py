@@ -29,15 +29,52 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
     """
     arm_resource_type = "Microsoft.Network/networkSecurityGroups"
 
-    def _get_base_secgroup_header(self):
-        """ _get_base_secgroup_header is a helper method which returns a dict
-        containing the standard set of properties of an ARM
-        Security Group declaration.
+    def _get_rules(self):
+        """ _get_rules is a helper method which returns a list of all
+            the resulting ARM security group rules to be created
+            following the translation.
+
+            This method should be implemented in all inheriting classes.
+        """
+        return []
+
+    def get_variables(self):
+        """ get_variables returns the dict of all the required ARM
+        template variables for the EC2 security group.
         """
         return {
+            self._make_var_name("secGroupName"): self._name,
+        }
+
+    def get_parameters(self):
+        """ get_parameters returns the dict of ARM template parameters
+        associated with the EC2 security group.
+
+        It is no-op as there usually are no parameters for
+        EC2 security groups.
+        """
+        return {}
+
+    def get_dependencies(self):
+        """ get_dependencies returns a list of resources which this resource
+        depends on.
+
+        It is no-op as Azure security groups are fully stand-alone resources.
+        """
+        return []
+
+    def get_resource_data(self):
+        """ get_resource_data returns a list of all the options associated to
+        this resource which is directly serializable into JSON and used in the
+        resulting ARM template for this resource.
+        """
+        return [{
             "apiVersion": ARM_API_2015_05_01_PREVIEW,
             "type": self.arm_resource_type,
             "name": ("[variables('secGroupName_%s')]" %
                      self._heat_resource.name),
             "location": "[variables('location')]",
-        }
+            "properties": {
+                "securityRules": self._get_rules()
+            }
+        }]
