@@ -35,6 +35,7 @@ from heat2arm.translators.instances import nova_server
 from heat2arm.translators.networking import neutron_floating_ip
 from heat2arm.translators.networking import neutron_net, neutron_port
 from heat2arm.translators.networking import neutron_router
+from heat2arm.translators.networking import ec2_secgroup
 
 
 LOG = logging.getLogger(__name__)
@@ -64,6 +65,7 @@ DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
 RESOURCE_TRANSLATORS = [
     nova_server.NovaServerARMTranslator,
+    ec2_secgroup.EC2SecurityGroupARMTranslator,
     neutron_router.NeutronRouterARMTranslator,
     neutron_router.NeutronRouterInterfaceARMTranslator,
     neutron_floating_ip.NeutronFloatingIPARMTranslator,
