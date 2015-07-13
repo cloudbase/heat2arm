@@ -34,8 +34,8 @@ class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
     Neutron networks can be modeled as Azure virtual
     networks together with some additional sub-components.
     """
-    # No direct ARM resource translation
-    # Azure virtual networks encompass both Neutron networks and subnets
+    # No direct ARM resource translation.
+    # Azure virtual networks encompass both Neutron networks and subnets.
     heat_resource_type = "OS::Neutron::Net"
 
     def get_variables(self):

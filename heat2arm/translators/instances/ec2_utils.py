@@ -18,34 +18,50 @@
     which aid in instance translations.
 """
 
+from oslo.config import cfg
 
-def get_azure_flavor(conf, flavor):
-    """ get_azure_flavor is a helper funcion which returns the
-    appropriate Azure VM size corresponding to the given image flavor
-    or a the pre-set sensible default.
+# Get the config instance and add options:
+CONF = cfg.CONF
+CONF.register_opts({
+    cfg.DictOpt(
+        "ec2_vm_type_to_size_map",
+        default={
+            "m1.tiny": "Basic_A0",
+            "m1.small": "Basic_A1",
+            "m1.medium": "Basic_A2",
+            "m1.large": "Basic_A3",
+            "m1.xlarge": "basic_A4",
+        },
+        help="A mapping between EC2 VM types and Azure machine sizes."
+    ),
+    cfg.DictOpt(
+        "ec2_vm_image_map",
+        default={
+            "U10-x86_64-cfntools":
+            "Canonical;UbuntuServer;10.04-LTS"
+        },
+        help="A map between EC2 image names and Azure ones.",
+    )
+})
 
-    conf: oslo_config.cfg.ConfigOpts.
 
-    It relies on options called 'vm_flavor_size_map' and 'vm_default_size'
-    having been pre-set in the conf.
+def get_azure_flavor(flavor):
+    """ get_azure_flavor is a helper function which returns the
+    appropriate Azure VM size corresponding to the given Amazon
+    image flavor or a the pre-set sensible default.
     """
-    return conf.vm_flavor_size_map.get(flavor, conf.vm_default_size)
+    return CONF.ec2_vm_type_to_size_map.get(flavor, CONF.vm_default_size)
 
 
-def get_azure_image_info(conf, nova_image):
+def get_azure_image_info(ec2_image):
     """ get_azure_image_info is a helper function which returns
     the info of the image.
-
-    conf: oslo_config.cfg.ConfigOpts.
-
-    It relies on options called 'vm_image_map'
-    having been pre-set in the conf.
     """
-    azure_image_info_str = conf.vm_image_map.get(nova_image)
+    azure_image_info_str = CONF.ec2_vm_image_map.get(ec2_image)
     if not azure_image_info_str:
         raise Exception(
             'Nova image "%s" cannot be mapped to an Azure equivalent. Please '
-            'update the "vm_image_map" configuration option' % nova_image)
+            'update the "ec2_vm_image_map" configuration option' % ec2_image)
 
     azure_image_info = tuple(azure_image_info_str.split(";"))
     if len(azure_image_info) != 3:

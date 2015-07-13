@@ -62,7 +62,7 @@ DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
 RESOURCE_TRANSLATORS = [
     instances.NovaServerARMTranslator,
-    # instances.EC2InstanceARMTranslator,
+    instances.EC2InstanceARMTranslator,
     networking.EC2SecurityGroupARMTranslator,
     networking.NeutronSecurityGroupARMTranslator,
     networking.NeutronRouterARMTranslator,

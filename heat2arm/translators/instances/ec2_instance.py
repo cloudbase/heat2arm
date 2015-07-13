@@ -20,46 +20,13 @@
 import json
 import logging
 
-from oslo_config import cfg
-
-from heat2arm.translators.instances import utils
+from heat2arm.translators.instances import ec2_utils as utils
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
 )
 
 
 LOG = logging.getLogger(__name__)
-
-# Get the config instance and add options:
-CONF = cfg.CONF
-CONF.register_opts({
-    cfg.DictOpt(
-        "vm_type_to_size_map",
-        # TODO: would be nice to be able to auto-generate these:
-        default={
-            "m1.tiny": "Basic_A0",
-            "m1.small": "Basic_A1",
-            "m1.medium": "Basic_A2",
-            "m1.large": "Basic_A3",
-            "m1.xlarge": "basic_A4",
-        },
-        help="A mapping between EC2 VM types and Azure machine sizes."
-    ),
-    cfg.StrOpt(
-        "vm_default_size",
-        default="Basic_A1",
-        help="Default Azure size in case of an EC2 VM type "
-             "could not be mapped.",
-    ),
-    cfg.DictOpt(
-        "vm_image_map",
-        default={
-            "U10-x86_64-cfntools":
-            "Canonical;UbuntuServer;10.04-LTS"
-        },
-        help="A map between EC2 image names and Azure ones.",
-    )
-})
 
 
 class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
@@ -73,26 +40,41 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         associated with the Heat template's resource translation.
         """
         (publisher, offer, sku) = utils.get_azure_image_info(
-            CONF, self._heat_resource.properties["InstanceType"]
+            self._heat_resource.properties["ImageId"]
         )
 
         return {
             self._make_var_name("vmName"): self._name,
             self._make_var_name("vmSize"): utils.get_azure_flavor(
-                CONF, self._heat_resource.properties["InstanceType"]
+                self._heat_resource.properties["InstanceType"]
             ),
             self._make_var_name("imgPublisher"): publisher,
             self._make_var_name("imgOffer"): offer,
             self._make_var_name("imgSku"): sku,
         }
 
-    def _get_ref_port_resource_names(self):
-        # TODO
-        pass
+    # NOTE:the following methods are inherited from BaseInstanceARMTranslator:
+    #   - get_parameters.
+    #   - get_dependencies.
+    #   - get_resource_data.
 
-    def _get_network_interfaces(self):
-        # TODO
-        pass
+    def _get_ref_port_resource_names(self):
+        """ _get_ref_port_resource_name is a helper method which returns a list
+        of all the Neurton port resources wich reference this EC2 instance.
+        """
+        port_resource_names = []
+
+        for resource in self._heat_resource.stack.iter_resources():
+            if (resource.type() == "OS::Neutron::Port"
+                    and "device_id" in resource.properties.data
+                    and resource.properties.data["device_id"] == self._name):
+                port_resource_names.append({
+                    "id":
+                        "[resourceId('Microsoft.Network/networkInterfaces'"
+                        ", variables('nicName_%s'))]" % resource.name
+                })
+
+        return port_resource_names
 
     def _get_vm_properties(self):
         """ _get_vm_properties is a helper method which returns the dict of all
@@ -112,3 +94,5 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
                 "networkInterfaces": self._get_network_interfaces(),
             }
         })
+
+        return vm_properties
