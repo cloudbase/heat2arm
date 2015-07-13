@@ -112,4 +112,3 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
                 "networkInterfaces": self._get_network_interfaces(),
             }
         })
-

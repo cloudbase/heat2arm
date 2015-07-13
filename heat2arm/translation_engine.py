@@ -31,12 +31,8 @@ from heat.engine import template
 from heat.tests import utils as test_utils
 
 from heat2arm import constants
-from heat2arm.translators.instances import nova_server
-from heat2arm.translators.networking import neutron_floating_ip
-from heat2arm.translators.networking import neutron_net, neutron_port
-from heat2arm.translators.networking import neutron_router
-from heat2arm.translators.networking import ec2_secgroup
-from heat2arm.translators.networking import neutron_secgroup
+from heat2arm.translators import instances
+from heat2arm.translators import networking
 
 
 LOG = logging.getLogger(__name__)
@@ -65,16 +61,16 @@ CONF.register_opts([
 DEFAULT_STORAGE_ACCOUNT_CONTAINER_NAME = "vhds"
 
 RESOURCE_TRANSLATORS = [
-    nova_server.NovaServerARMTranslator,
-    # ec2_instance.EC2InstanceARMTranslator,
-    ec2_secgroup.EC2SecurityGroupARMTranslator,
-    neutron_secgroup.NeutronSecurityGroupARMTranslator,
-    neutron_router.NeutronRouterARMTranslator,
-    neutron_router.NeutronRouterInterfaceARMTranslator,
-    neutron_floating_ip.NeutronFloatingIPARMTranslator,
-    neutron_net.NeutronNetARMTranslator,
-    neutron_net.NeutronSubnetARMTranslator,
-    neutron_port.NeutronPortARMTranslator,
+    instances.NovaServerARMTranslator,
+    # instances.EC2InstanceARMTranslator,
+    networking.EC2SecurityGroupARMTranslator,
+    networking.NeutronSecurityGroupARMTranslator,
+    networking.NeutronRouterARMTranslator,
+    networking.NeutronRouterInterfaceARMTranslator,
+    networking.NeutronFloatingIPARMTranslator,
+    networking.NeutronNetARMTranslator,
+    networking.NeutronSubnetARMTranslator,
+    networking.NeutronPortARMTranslator,
 ]
 
 

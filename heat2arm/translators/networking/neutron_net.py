@@ -111,4 +111,3 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
                 }]
             }
         }]
-
