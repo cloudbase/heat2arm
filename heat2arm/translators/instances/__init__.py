@@ -14,12 +14,24 @@
 #    under the License.
 
 """
-    General constants.
+    This module contains definitions for both the Nova and
+    Cloud Formation instance translators.
 """
 
-# ARM_API_2015_05_01_PREVIEW is the version of the ARM API to be used:
-ARM_API_2015_05_01_PREVIEW = "2015-05-01-preview"
+from oslo.config import cfg
 
-# ARM_SCHEMA_URL is the default URL for fetching the ARM template JSON schema:
-ARM_SCHEMA_URL = ("https://schema.management.azure.com/schemas/"
-                  "2015-01-01/deploymentTemplate.json#")
+from heat2arm.translators.instances.ec2_instance import (
+    EC2InstanceARMTranslator
+)
+from heat2arm.translators.instances.nova_server import NovaServerARMTranslator
+
+# Get the config instance and add options:
+CONF = cfg.CONF
+CONF.register_opts({
+    cfg.StrOpt(
+        "vm_default_size",
+        default="Basic_A1",
+        help="Default Azure size in case of an EC2 VM type "
+             "could not be mapped.",
+    ),
+})

@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+    Main entry point of the application.
+"""
+
 import argparse
 import json
 import logging
-import os
 import sys
 import warnings
 
@@ -29,26 +32,18 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-def _open_file_read(parser, arg):
-    if not os.path.exists(arg):
-        parser.error("The file %s does not exist!" % arg)
-    else:
-        return open(arg, 'rb')
-
-
-def _open_file_write(parser, arg):
-    return open(arg, 'wb')
-
-
 def _parse_args():
+    """ _parse_args is a helper function which parses the provided command line
+    arguments and returns the parsed arguments object.
+    """
     parser = argparse.ArgumentParser(
         description='OpenStack Heat to Azure ARM template converter.')
     parser.add_argument("--in", dest="heat_template", required=True,
                         help="Path to the OpenStack Heat template to convert",
-                        type=lambda x: _open_file_read(parser, x))
+                        type=argparse.FileType('rb'))
     parser.add_argument("--out", dest="arm_template",
                         help="Optional Azure ARM template output path",
-                        type=lambda x: _open_file_write(parser, x),
+                        type=argparse.FileType('w'),
                         default=sys.stdout)
     parser.add_argument("--config-file",
                         help="Path to an optional configuration file",
@@ -57,14 +52,18 @@ def _parse_args():
 
 
 def _setup_logging():
+    """ _setup_logging is a helper function which sets up the logging
+    for the application and disables all Heat warnings.
+    """
     streamformat = "%(levelname)s (%(module)s:%(lineno)d) %(message)s"
     logging.basicConfig(level=logging.WARNING,
                         format=streamformat)
-    # Disable Heat warnings
+    # disable Heat warnings:
     warnings.simplefilter("ignore")
 
 
 def main():
+    """ main is the entry point of the application. """
     _setup_logging()
 
     args = _parse_args()
@@ -78,6 +77,7 @@ def main():
 
     args.arm_template.write(json.dumps(arm_template_data, indent=4))
     args.arm_template.close()
+
 
 if __name__ == "__main__":
     main()

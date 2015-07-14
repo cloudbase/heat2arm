@@ -1,0 +1,158 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs a single-instance WordPress deployment using a local MySQL database to store the data.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "DBName": {
+      "Default": "wordpress",
+      "Description" : "The WordPress database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBUsername": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account password",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+
+    "DBRootPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "Root password for MySQL",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+    "LinuxDistribution": {
+      "Default": "U10",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : ["U10"]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "m1.tiny"    : { "Arch" : "32" },
+      "m1.small"    : { "Arch" : "64" },
+      "m1.medium"    : { "Arch" : "64" },
+      "m1.large"   : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" }
+    },
+    "DistroArch2AMI": {
+      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" }
+    }
+  },
+
+  "Resources" : {
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "services" : {
+              "sysvinit" : {
+                "mysql"    : { "enabled" : "true", "ensureRunning" : "true" },
+                "apache2"  : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "apt-get -y update\n",
+          "apt-get -y install apache2\n",
+          "apt-get -y install wordpress\n",
+          "echo mysql-server mysql-server/root_password select ", { "Ref" : "DBRootPassword" }, " | debconf-set-selections\n",
+          "echo mysql-server mysql-server/root_password_again select ", { "Ref" : "DBRootPassword" }, " | debconf-set-selections\n",
+          "apt-get -y install mysql-server\n",
+          "/opt/aws/bin/cfn-init\n",
+          "cat << EOF | mysql -uroot -p", { "Ref" : "DBRootPassword" }, "\n",
+          "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
+          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO \"", { "Ref" : "DBUsername" }, "\"@\"localhost\"\n",
+          "IDENTIFIED BY \"", { "Ref" : "DBPassword" }, "\";\n",
+          "FLUSH PRIVILEGES;\n",
+          "EXIT\n",
+          "EOF\n",
+          "ln -s /usr/share/wordpress /var/www/wordpress\n",
+          "cat << EOF > /etc/apache2/sites-available/wordpress\n",
+          "Alias /blog /usr/share/wordpress\n",
+          "Alias /blog/wp-content /var/lib/wordpress/wp-content\n",
+          "<Directory /usr/share/wordpress>\n",
+          "    Options FollowSymLinks\n",
+          "    AllowOverride Limit Options FileInfo\n",
+          "    DirectoryIndex index.php\n",
+          "    Order allow,deny\n",
+          "    Allow from all\n",
+          "</Directory>\n",
+          "<Directory /var/lib/wordpress/wp-content>\n",
+          "    Options FollowSymLinks\n",
+          "    Order allow,deny\n",
+          "    Allow from all\n",
+          "</Directory>\n",
+          "EOF\n",
+          "cat << EOF > /etc/wordpress/config-default.php\n",
+          "<?php\n",
+          "define('DB_NAME', '", { "Ref" : "DBName" }, "');\n",
+          "define('DB_USER', '", { "Ref" : "DBUsername" }, "');\n",
+          "define('DB_PASSWORD', '", { "Ref" : "DBPassword" }, "');\n",
+          "define('DB_HOST', 'localhost');\n",
+          "define('WP_CONTENT_DIR', '/var/lib/wordpress/wp-content');\n",
+          "?>\n",
+          "EOF\n",
+          "service apache2 restart\n"
+        ]]}}
+      }
+    }
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
+      "Description" : "URL for Wordpress wiki"
+    }
+  }
+}
