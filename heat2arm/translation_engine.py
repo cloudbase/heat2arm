@@ -67,9 +67,11 @@ RESOURCE_TRANSLATORS = [
     networking.NeutronSecurityGroupARMTranslator,
     networking.NeutronRouterARMTranslator,
     networking.NeutronRouterInterfaceARMTranslator,
+    networking.EC2eipARMTranslator,
     networking.NeutronFloatingIPARMTranslator,
     networking.NeutronNetARMTranslator,
     networking.NeutronSubnetARMTranslator,
+    networking.EC2eipAssocARMTranslator,
     networking.NeutronPortARMTranslator,
 ]
 

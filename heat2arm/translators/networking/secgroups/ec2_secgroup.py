@@ -17,7 +17,7 @@
     Contains the definition for the EC2 security group translator.
 """
 
-from heat2arm.translators.networking.base_secgroup import (
+from heat2arm.translators.networking.secgroups.base_secgroup import (
     BaseSecurityGroupARMTranslator
 )
 

@@ -18,13 +18,12 @@
     Cloud Formation networking resources' translators.
 """
 
-from heat2arm.translators.networking.ec2_secgroup import (
+from heat2arm.translators.networking.secgroups import (
     EC2SecurityGroupARMTranslator,
-)
-from heat2arm.translators.networking.neutron_secgroup import (
     NeutronSecurityGroupARMTranslator,
 )
-from heat2arm.translators.networking.neutron_floating_ip import (
+from heat2arm.translators.networking.floating_ips import (
+    EC2eipARMTranslator,
     NeutronFloatingIPARMTranslator,
 )
 from heat2arm.translators.networking.neutron_net import (
@@ -35,6 +34,7 @@ from heat2arm.translators.networking.neutron_router import (
     NeutronRouterARMTranslator,
     NeutronRouterInterfaceARMTranslator,
 )
-from heat2arm.translators.networking.neutron_port import (
+from heat2arm.translators.networking.nics import (
     NeutronPortARMTranslator,
+    EC2eipAssocARMTranslator,
 )

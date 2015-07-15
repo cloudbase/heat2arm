@@ -14,20 +14,19 @@
 #    under the License.
 
 """
-    Defines the Neutron Floating IP range translator.
+    Defines the base translator for floating IP resource types.
 """
 
 from heat2arm.constants import ARM_API_2015_05_01_PREVIEW
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
-class NeutronFloatingIPARMTranslator(BaseHeatARMTranslator):
-    """ NeutronFloatingIPARMTranslator is the translator associated to a
-    Neutron floating IP range.
+class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
+    """ BaseFloatingIPARMTranslator provides the base implementation for
+    all inheriting floating IP resource type translators.
     """
-    heat_resource_type = "OS::Neutron::FloatingIP"
-    # NOTE: will not be mapped into an ARM resource.
-    arm_resource_type = None
+    heat_resource_type = None
+    arm_resource_type = "Microsoft.Network/publicIPAddresses"
 
     def get_parameters(self):
         """ get_parameters returns a dict of all the parameters associated

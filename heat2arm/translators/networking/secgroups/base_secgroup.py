@@ -31,10 +31,10 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
 
     def _get_rules(self):
         """ _get_rules is a helper method which returns a list of all
-            the resulting ARM security group rules to be created
-            following the translation.
+        the resulting ARM security group rules to be created
+        following the translation.
 
-            This method should be implemented in all inheriting classes.
+        NOTE: this is stubbed and must be implemented in all inheriting classes.
         """
         return []
 

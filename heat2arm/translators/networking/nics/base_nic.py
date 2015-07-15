@@ -14,47 +14,52 @@
 #    under the License.
 
 """
-    Defines the translator for a Neutron port resource.
+    Defines the base implementation for ARM NIC resource translators.
 """
 
 from heat2arm.constants import ARM_API_2015_05_01_PREVIEW
-from heat2arm.translators import base
+from heat2arm.translators.base import BaseHeatARMTranslator
 
 
-class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
-    """ NeutronPortARMTranslator is the translator associated to Neutron port.
+class BaseNICARMTranslator(BaseHeatARMTranslator):
+    """ BaseARMNICTranslator contains the base implementation for all
+    translators which map resources to Azure NICs.
     """
-    heat_resource_type = "OS::Neutron::Port"
-    # NOTE: will not be mapped into an ARM resource.
-    arm_resource_type = None
+    heat_resource_type = None
+    arm_resource_type = "Microsoft.Network/networkInterfaces"
 
     def get_variables(self):
         """ get_variables returns a dict of ARM template variables associated
-        to this port.
+        to the translation.
         """
         return {
             "nicName_%s" % self._name: self._name,
         }
 
     def _get_floating_ip_resource_name(self):
-        """ _get_floating_ip_resource_name is a helper method which returns the
-        name of the Neutron Floating IP pool associated to the port resource.
+        """ _get_floating_ip_resource_name is a helper function which
+        returns the name of the floating IP resource associated to
+        this NIC-like resource.
+
+        It must be implemented by all inheriting classes.
         """
-        for heat_resource in self._heat_resource.stack.iter_resources():
-            if heat_resource.type() == "OS::Neutron::FloatingIP":
-                port_resource = base.get_ref_heat_resource(
-                    heat_resource, 'port_id')
-                if port_resource is self._heat_resource:
-                    return heat_resource.name
+        pass
+
+    def _get_ref_network(self):
+        """ _get_ref_network is a helper function which returns the name
+        of the network which references this NIC-like resource.
+
+        NOTE: It is stubbed and must be implemented by all inheriting classes.
+        """
+        pass
 
     def get_dependencies(self):
         """ get_dependencies returns a list of all the dependencies
-        of the Neutron port.
+        of the NIC-like resource.
         """
         floating_ip_resource_name = self._get_floating_ip_resource_name()
 
-        heat_net_resource = base.get_ref_heat_resource(
-            self._heat_resource, "network_id")
+        heat_net_resource = self._get_ref_network()
         net_name = heat_net_resource.name
 
         dependencies = [
@@ -72,15 +77,13 @@ class NeutronPortARMTranslator(base.BaseHeatARMTranslator):
         return dependencies
 
     def get_resource_data(self):
-        """ get_resource_data returns the list of data associated to the port
+        """ get_resource_data returns the list of data associated to resource
         which is directly serializable into ARM template format.
         """
-        heat_net_resource = base.get_ref_heat_resource(
-            self._heat_resource, "network_id")
+        heat_net_resource = self._get_ref_network()
         net_name = heat_net_resource.name
 
         nic_properties_data = {
-            # TODO: check the Heat net dhcp property
             "privateIPAllocationMethod": "Dynamic",
             "subnet": {
                 "id":

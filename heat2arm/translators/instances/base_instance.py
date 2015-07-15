@@ -55,7 +55,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         list of all the Neutron port resource names which either are referenced
         by a Nova server or reference an EC2 instance.
 
-        It is stubbed and should be implemented by inheriting classes.
+        NOTE: it is stubbed and should be implemented by inheriting classes.
         """
         pass
 
@@ -63,7 +63,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ _get_vm_properties is a helper method which returns the dict of all
         auxiliary properties if the EC2 instance.
 
-        It is stubbed and should be implemented by inheriting classes.
+        NOTE: it is stubbed and should be implemented by inheriting classes.
         """
         pass
 

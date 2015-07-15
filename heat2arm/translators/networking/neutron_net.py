@@ -16,27 +16,29 @@
 """
     Defines translators for mapping Neutron networking resources
     to an Azure Virtual Network resource.
+
+    ARM Network Resource Provider:
+https://azure.microsoft.com/en-gb/documentation/articles/resource-groups-networking/
 """
 
 from heat2arm import constants
 from heat2arm.translators import base
-
-'''
-ARM Network Resource Provider:
-https://azure.microsoft.com/en-gb/documentation/articles/resource-groups-networking/
-'''
 
 
 class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
     """ NeutronNetARMTranslator is the translator for Neutron networks.
 
     Despite not having a direct stand-alone equivalent;
-    Neutron networks can be modeled as Azure virtual
-    networks together with some additional sub-components.
+    Neutron networks can be modeled as Azure Virtual
+    Networks together with some additional sub-components.
+
+    This translator's only purpose is setting up all the variables
+    required for the later definition of the equivalent Virtual Network
+    by the NeutronSubnetARMTranslator translator.
     """
-    # No direct ARM resource translation.
-    # Azure virtual networks encompass both Neutron networks and subnets.
     heat_resource_type = "OS::Neutron::Net"
+    # NOTE: will not be mapped into an ARM resource.
+    arm_resource_type = None
 
     def get_variables(self):
         return {
@@ -57,13 +59,11 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
     """ NeutronSubnetARMTranslator is the translator associated
     to a Neutron subnet.
 
-    Because of the way Azure handles subnets (as being an integral part of a
-    vitual network); this translator is used merely as a helper for the main
-    NeutronNetARMTranslator.
+    This translator leads to the defining of a new virtual network; as
+    Neutron nets themselves have no real resulting translation without them.
     """
     heat_resource_type = "OS::Neutron::Subnet"
-    # NOTE: will not be mapped into an ARM resource.
-    arm_resource_type = None
+    arm_resource_type = "Microsoft.Network/virtualNetworks"
 
     def get_variables(self):
         """ get_variables resurns the dict of ARM template

@@ -17,7 +17,7 @@
     Contains the definition for the Neutron security group translator.
 """
 
-from heat2arm.translators.networking.base_secgroup import (
+from heat2arm.translators.networking.secgroups.base_secgroup import (
     BaseSecurityGroupARMTranslator
 )
 
