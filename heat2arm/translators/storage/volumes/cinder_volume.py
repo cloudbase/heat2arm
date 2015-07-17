@@ -14,21 +14,20 @@
 #    under the License.
 
 """
-    Defines the AWS EC2 elastic IP translator.
+    Contains the definition of the Cinder volume translator.
 """
 
-from heat2arm.translators.networking.floating_ips.base_floating_ip import (
-    BaseFloatingIPARMTranslator
+from heat2arm.translators.storage.volumes.base_volume import (
+    BaseVolumeARMTranslator,
 )
 
 
-class EC2eipARMTranslator(BaseFloatingIPARMTranslator):
-    """ EC2eipARMTranslator is the translator for an
-    EC2 elastic IP.
+class CinderVolumeARMTranslator(BaseVolumeARMTranslator):
+    """ CinderVolumeARMTranslator is the translator for Cinder volumes.
     """
-    heat_resource_type = "AWS::EC2::EIP"
+    heat_resource_type = "OS::Cinder::Volume"
+    arm_resource_type = ""
 
-    # NOTE: the following are inherited from BaseFloatingIPARMTranslator:
-    #   - get_parameters.
-    #   - get_variables.
-    #   - get_resource_data.
+    # NOTE: the following are inherited from BaseVolumeARMTranslator:
+    #   - get_parameters
+    #   - get_variables

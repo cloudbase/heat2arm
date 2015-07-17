@@ -67,6 +67,14 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """
         pass
 
+    def _get_attached_volumes(self):
+        """ _get_attached_volumes is a helper function which returns the list
+        of all volumes attached to the instance.
+
+        NOTE: it is stubbed and should be implemented by inheriting classes.
+        """
+        pass
+
     def _get_network_interfaces(self):
         """ _get_network_interfaces is a helper method which returns a list of
         all the network interfaces which are attached to this Nova server.
@@ -98,7 +106,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         There are still some specific options which require specialised
         per-translator identifying, such as networking options.
         """
-        return {
+        props = {
             "hardwareProfile": {
                 "vmSize": "[variables('vmSize_%s')]" % self._name
             },
@@ -116,7 +124,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                                "parameters('newStorageAccountName'),"
                                "'.blob.core.windows.net/',variables("
                                "'vmStorageAccountContainerName'),'/',"
-                               "variables('vmName_%s'),'_root.vhd')]" %
+                               "variables('vmName_%s'),'.vhd')]" %
                                self._name
                     },
                     "caching": "ReadWrite",
@@ -124,6 +132,14 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 }
             },
         }
+
+        volumes = self._get_attached_volumes()
+        if volumes:
+            props["storageProfile"].update({
+                "dataDisks": volumes
+            })
+
+        return props
 
     def get_dependencies(self):
         """ get_dependencies returns the list of resources which are

@@ -37,8 +37,8 @@ class EC2eipAssocARMTranslator(BaseNICARMTranslator):
         """
         # The way it's layed out in CFN; we just trivially return
         # the value of the EIP that is contained in the Association:
-        if "EIP" in self._heat_resource.properties.data["EIP"]:
-            return self._heat_resource.properties.data["EIP"]
+        if "EIP" in self._heat_resource.properties.data:
+            return self._heat_resource.properties.data["EIP"].args
 
     def _get_ref_network(self):
         """ _get_ref_network is a helper function which returns the name
