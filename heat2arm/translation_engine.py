@@ -33,6 +33,7 @@ from heat.tests import utils as test_utils
 from heat2arm import constants
 from heat2arm.translators import instances
 from heat2arm.translators import networking
+from heat2arm.translators import storage
 
 
 LOG = logging.getLogger(__name__)
@@ -67,10 +68,16 @@ RESOURCE_TRANSLATORS = [
     networking.NeutronSecurityGroupARMTranslator,
     networking.NeutronRouterARMTranslator,
     networking.NeutronRouterInterfaceARMTranslator,
+    networking.EC2eipARMTranslator,
     networking.NeutronFloatingIPARMTranslator,
     networking.NeutronNetARMTranslator,
     networking.NeutronSubnetARMTranslator,
+    networking.EC2eipAssocARMTranslator,
     networking.NeutronPortARMTranslator,
+    storage.CinderVolumeARMTranslator,
+    storage.CinderVolumeAttachmentARMTranslator,
+    storage.EBSVolumeARMTranslator,
+    storage.EBSVolumeAttachmentARMTranslator,
 ]
 
 

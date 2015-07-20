@@ -67,7 +67,8 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
 
         if 'networks' in self._heat_resource.properties.data:
             for port_data in self._heat_resource.properties.data["networks"]:
-                port_resource_names.append(port_data['port'].args)
+                if 'port' in port_data:
+                    port_resource_names.append(port_data['port'].args)
 
         return port_resource_names
 
@@ -91,3 +92,27 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
         })
 
         return vm_properties
+
+    def _get_attached_volumes(self):
+        """ Returns a list of all volumes attached to this instance.
+        """
+        lun = 0
+        volumes = []
+
+        for resource in self._heat_resource.stack.iter_resources():
+            if (resource.type() == "OS::Cinder::VolumeAttachment" and
+                    resource.properties.data["instance_uuid"] == self._name):
+                volume_name = resource.properties.data["volume_id"].args
+                volumes.append({
+                    "name": self._name,
+                    "diskSizeGB": "[parameters('size_%s')]" %
+                                  volume_name,
+                    "lun": lun,
+                    "vhd": {
+                        "Uri": "[variables(diskUri_%s)]" %
+                               volume_name,
+                    }
+                })
+                lun = lun + 1
+
+        return volumes

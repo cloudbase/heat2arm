@@ -31,7 +31,6 @@ class BaseHeatARMTranslator(object):
 
     It defines stubs for common functions required of a translator.
     """
-
     # fields for keeping the corresponding heat and ARM resource types
     # the this translator maps to/from:
     heat_resource_type = None

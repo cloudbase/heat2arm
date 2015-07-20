@@ -55,7 +55,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         list of all the Neutron port resource names which either are referenced
         by a Nova server or reference an EC2 instance.
 
-        It is stubbed and should be implemented by inheriting classes.
+        NOTE: it is stubbed and should be implemented by inheriting classes.
         """
         pass
 
@@ -63,7 +63,15 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ _get_vm_properties is a helper method which returns the dict of all
         auxiliary properties if the EC2 instance.
 
-        It is stubbed and should be implemented by inheriting classes.
+        NOTE: it is stubbed and should be implemented by inheriting classes.
+        """
+        pass
+
+    def _get_attached_volumes(self):
+        """ _get_attached_volumes is a helper function which returns the list
+        of all volumes attached to the instance.
+
+        NOTE: it is stubbed and should be implemented by inheriting classes.
         """
         pass
 
@@ -98,7 +106,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         There are still some specific options which require specialised
         per-translator identifying, such as networking options.
         """
-        return {
+        props = {
             "hardwareProfile": {
                 "vmSize": "[variables('vmSize_%s')]" % self._name
             },
@@ -116,7 +124,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                                "parameters('newStorageAccountName'),"
                                "'.blob.core.windows.net/',variables("
                                "'vmStorageAccountContainerName'),'/',"
-                               "variables('vmName_%s'),'_root.vhd')]" %
+                               "variables('vmName_%s'),'.vhd')]" %
                                self._name
                     },
                     "caching": "ReadWrite",
@@ -124,6 +132,14 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 }
             },
         }
+
+        volumes = self._get_attached_volumes()
+        if volumes:
+            props["storageProfile"].update({
+                "dataDisks": volumes
+            })
+
+        return props
 
     def get_dependencies(self):
         """ get_dependencies returns the list of resources which are
