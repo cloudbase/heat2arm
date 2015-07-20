@@ -51,6 +51,6 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
             "diskUri_%s" % self._name:
                 "[concat('http://',parameters('newStorageAccountName'),"
                 "'.blob.core.windows.net/',"
-                "variables('vmStorageAccountContainerName'),'/',"
-                "variables('vmName'),'%s.vhd')]" % self._name,
+                "variables('vmStorageAccountContainerName'),"
+                "'/%s.vhd')]" % self._name,
         }

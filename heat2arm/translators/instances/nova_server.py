@@ -20,8 +20,6 @@
 
 import logging
 
-import json
-
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
 )
@@ -72,26 +70,14 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
 
         return port_resource_names
 
-    def _get_vm_properties(self):
-        """ _get_vm_properties is a helper method which returns the dict with
-        all the auxiliary properties associated to the machine:
+    def _get_userdata(self):
+        """ _get_userdata is a helper method which returns the userdata
+        from the instance's definition, if any.
         """
-        os_profile_data = self._get_base_os_profile_data()
+        if 'user_data' in self._heat_resource.properties:
+            return self._heat_resource.properties['user_data']
 
-        user_data = self._heat_resource.properties['user_data']
-        if user_data:
-            os_profile_data["customData"] = (
-                "[base64('%s')]" % json.dumps(user_data))
-
-        vm_properties = self._get_base_vm_properties()
-        vm_properties.update({
-            "osProfile": os_profile_data,
-            "networkProfile": {
-                "networkInterfaces": self._get_network_interfaces()
-            }
-        })
-
-        return vm_properties
+        return ""
 
     def _get_attached_volumes(self):
         """ Returns a list of all volumes attached to this instance.
@@ -109,9 +95,10 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
                                   volume_name,
                     "lun": lun,
                     "vhd": {
-                        "Uri": "[variables(diskUri_%s)]" %
+                        "Uri": "[variables('diskUri_%s')]" %
                                volume_name,
-                    }
+                    },
+                    "createOption": "Empty"
                 })
                 lun = lun + 1
 

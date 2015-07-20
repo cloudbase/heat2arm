@@ -38,7 +38,7 @@ CONF.register_opts({
         "ec2_vm_image_map",
         default={
             "U10-x86_64-cfntools":
-            "Canonical;UbuntuServer;10.04-LTS"
+            "Canonical;UbuntuServer;12.04.5-LTS"
         },
         help="A map between EC2 image names and Azure ones.",
     )
