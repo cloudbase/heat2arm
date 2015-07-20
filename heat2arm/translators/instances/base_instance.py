@@ -18,6 +18,8 @@
     both Nova and EC2 instance translators.
 """
 
+import json
+
 from heat2arm.constants import ARM_API_2015_05_01_PREVIEW
 from heat2arm.translators.base import BaseHeatARMTranslator
 
@@ -59,17 +61,17 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """
         pass
 
-    def _get_vm_properties(self):
-        """ _get_vm_properties is a helper method which returns the dict of all
-        auxiliary properties if the EC2 instance.
+    def _get_attached_volumes(self):
+        """ _get_attached_volumes is a helper function which returns the list
+        of all volumes attached to the instance.
 
         NOTE: it is stubbed and should be implemented by inheriting classes.
         """
         pass
 
-    def _get_attached_volumes(self):
-        """ _get_attached_volumes is a helper function which returns the list
-        of all volumes attached to the instance.
+    def _get_userdata(self):
+        """ _get_userdata is a helper method which returns the userdata from
+        the instance's definition, if any.
 
         NOTE: it is stubbed and should be implemented by inheriting classes.
         """
@@ -99,14 +101,12 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             "adminPassword": "[parameters('adminPassword')]",
         }
 
-    def _get_base_vm_properties(self):
-        """ _get_base_vm_properties is a helper method which returns a default
-        dict of properties that all ARM template VM definitions should contain.
-
-        There are still some specific options which require specialised
-        per-translator identifying, such as networking options.
+    def _get_vm_properties(self):
+        """ _get_vm_properties is a helper method which returns the dict of all
+        auxiliary properties of the instance.
         """
-        props = {
+        # list the properties all instances must have:
+        vm_properties = {
             "hardwareProfile": {
                 "vmSize": "[variables('vmSize_%s')]" % self._name
             },
@@ -124,7 +124,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                                "parameters('newStorageAccountName'),"
                                "'.blob.core.windows.net/',variables("
                                "'vmStorageAccountContainerName'),'/',"
-                               "variables('vmName_%s'),'.vhd')]" %
+                               "variables('vmName_%s'),'_root.vhd')]" %
                                self._name
                     },
                     "caching": "ReadWrite",
@@ -133,13 +133,33 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             },
         }
 
+        # add any attached volumes, if applicable:
         volumes = self._get_attached_volumes()
         if volumes:
-            props["storageProfile"].update({
+            vm_properties["storageProfile"].update({
                 "dataDisks": volumes
             })
 
-        return props
+        # add the networking and the userdata, if applicable:
+        os_profile_data = self._get_base_os_profile_data()
+
+        user_data = self._get_userdata()
+        if user_data:
+            os_profile_data["customData"] = (
+                "[base64('%s')]" % json.dumps(user_data))
+
+        network_interfaces = self._get_network_interfaces()
+        if network_interfaces:
+            vm_properties.update({
+                "networkProfile": {
+                    "networkInterfaces": self._get_network_interfaces(),
+                }
+            })
+
+        vm_properties.update({
+            "osProfile": os_profile_data,
+        })
+        return vm_properties
 
     def get_dependencies(self):
         """ get_dependencies returns the list of resources which are

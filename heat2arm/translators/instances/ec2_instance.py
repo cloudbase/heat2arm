@@ -17,7 +17,6 @@
     Defines the translator and auxiliary functions for EC2 instances.
 """
 
-import json
 import logging
 
 from heat2arm.translators.instances import ec2_utils as utils
@@ -77,26 +76,14 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
 
         return port_resource_names
 
-    def _get_vm_properties(self):
-        """ _get_vm_properties is a helper method which returns the dict of all
-        auxiliary properties if the EC2 instance.
+    def _get_userdata(self):
+        """ _get_userdata is a helper method which returns the userdata
+        from the instance's definition, if any.
         """
-        os_profile_data = self._get_base_os_profile_data()
+        if 'UserData' in self._heat_resource.properties:
+            return self._heat_resource.properties['UserData']
 
-        user_data = self._heat_resource.properties["UserData"]
-        if user_data:
-            os_profile_data["customData"] = (
-                "[base64('%s')]" % json.dumps(user_data))
-
-        vm_properties = self._get_base_vm_properties()
-        vm_properties.update({
-            "osProfile": os_profile_data,
-            "networkProfile": {
-                "networkInterfaces": self._get_network_interfaces(),
-            }
-        })
-
-        return vm_properties
+        return ""
 
     def _get_attached_volumes(self):
         """ Returns a list of all volumes attached to this instance.
@@ -114,9 +101,10 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
                                   volume_name,
                     "lun": lun,
                     "vhd": {
-                        "Uri": "[variables(diskUri_%s)]" %
+                        "Uri": "[variables('diskUri_%s')]" %
                                volume_name,
-                    }
+                    },
+                    "createOption": "Empty"
                 })
                 lun = lun + 1
 
