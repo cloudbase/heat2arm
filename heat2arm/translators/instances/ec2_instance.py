@@ -96,7 +96,7 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
                     resource.properties.data["InstanceId"] == self._name):
                 volume_name = resource.properties.data["VolumeId"].args
                 volumes.append({
-                    "name": self._name,
+                    "name": volume_name,
                     "diskSizeGB": "[parameters('size_%s')]" %
                                   volume_name,
                     "lun": lun,
