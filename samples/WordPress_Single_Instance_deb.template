@@ -134,15 +134,6 @@
           "    Allow from all\n",
           "</Directory>\n",
           "EOF\n",
-          "cat << EOF > /etc/wordpress/config-default.php\n",
-          "<?php\n",
-          "define('DB_NAME', '", { "Ref" : "DBName" }, "');\n",
-          "define('DB_USER', '", { "Ref" : "DBUsername" }, "');\n",
-          "define('DB_PASSWORD', '", { "Ref" : "DBPassword" }, "');\n",
-          "define('DB_HOST', 'localhost');\n",
-          "define('WP_CONTENT_DIR', '/var/lib/wordpress/wp-content');\n",
-          "?>\n",
-          "EOF\n",
           "service apache2 restart\n"
         ]]}}
       }

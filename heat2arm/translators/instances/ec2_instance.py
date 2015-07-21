@@ -38,19 +38,22 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         """ get_variables returns a dict of ARM template variables
         associated with the Heat template's resource translation.
         """
+        base_vars = self._get_base_variables()
+
         (publisher, offer, sku) = utils.get_azure_image_info(
             self._heat_resource.properties["ImageId"]
         )
 
-        return {
-            self._make_var_name("vmName"): self._name,
+        base_vars.update({
             self._make_var_name("vmSize"): utils.get_azure_flavor(
                 self._heat_resource.properties["InstanceType"]
             ),
             self._make_var_name("imgPublisher"): publisher,
             self._make_var_name("imgOffer"): offer,
             self._make_var_name("imgSku"): sku,
-        }
+        })
+
+        return base_vars
 
     # NOTE:the following methods are inherited from BaseInstanceARMTranslator:
     #   - get_parameters.

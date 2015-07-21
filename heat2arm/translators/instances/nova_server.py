@@ -39,17 +39,20 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
         """ get_variables returns the dict of ARM template variables
         associated with the Heat template's resource translation.
         """
+        base_vars = self._get_base_variables()
+
         (publisher, offer, sku) = utils.get_azure_image_info(
             self._heat_resource.properties['image'])
 
-        return {
-            "vmName_%s" % self._name: self._name,
+        base_vars.update({
             "vmSize_%s" % self._name: utils.get_azure_flavor(
                 self._heat_resource.properties['flavor']),
             "imgPublisher_%s" % self._name: publisher,
             "imgOffer_%s" % self._name: offer,
             "imgSku_%s" % self._name: sku,
-        }
+        })
+
+        return base_vars
 
     # NOTE:the following methods are inherited from BaseInstanceARMTranslator:
     #   - get_parameters.
