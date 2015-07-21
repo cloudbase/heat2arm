@@ -90,7 +90,7 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
                     resource.properties.data["instance_uuid"] == self._name):
                 volume_name = resource.properties.data["volume_id"].args
                 volumes.append({
-                    "name": self._name,
+                    "name": volume_name,
                     "diskSizeGB": "[parameters('size_%s')]" %
                                   volume_name,
                     "lun": lun,

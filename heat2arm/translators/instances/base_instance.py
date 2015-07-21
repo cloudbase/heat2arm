@@ -131,6 +131,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                     "createOption": "FromImage"
                 }
             },
+            "networkProfile": {},
         }
 
         # add any attached volumes, if applicable:
@@ -150,10 +151,8 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
 
         network_interfaces = self._get_network_interfaces()
         if network_interfaces:
-            vm_properties.update({
-                "networkProfile": {
-                    "networkInterfaces": self._get_network_interfaces(),
-                }
+            vm_properties["networkProfile"].update({
+                "networkInterfaces": self._get_network_interfaces(),
             })
 
         vm_properties.update({
