@@ -35,9 +35,10 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ get_parameters is a sensible override of the method of the Base
         translator for fetching the parameters of the ARM translation.
 
-        It returns a dict containing a user name and password parameters.
+        It returns a dict containing a user name and password parameters, and
+        optionally the paramters for a VN and subnet if one is required.
         """
-        return {
+        base_params = {
             "adminUsername": {
                 "type": "string",
                 "metadata": {
@@ -51,6 +52,64 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 }
             }
         }
+
+        # check if there are any networkInterface-like resources attached to
+        # this VM; if none, add a parameter for the virtual network name this
+        # instance should be attached to which will be used later.
+        if not self._get_network_interfaces():
+            base_params.update({
+                "virtualNetworkName_VM_%s" % self._name: {
+                    "type": "string",
+                    "metadata": {
+                        "description": "Name for a virtual network which will "
+                                       "be created for VM '%s' to be added to."
+                                       % self._name
+                    }
+                },
+                "subnetName_VM_%s" % self._name: {
+                    "type": "string",
+                    "metadata": {
+                        "description": "Name for a subnet of the provided "
+                                       "virtual network for VM '%s' to be"
+                                       "added in." % self._name
+                    }
+                },
+                "subnetAddressPrefix_VM_%s" % self._name: {
+                    "type": "string",
+                    "metadata": {
+                        "description": "Address space for the provided subnet "
+                                       "for VM '%s' to be attached to." %
+                                       self._name,
+                    }
+                }
+            })
+
+        return base_params
+
+    def _get_base_variables(self):
+        """ _get_base_variables is a helper method which retuns the list of
+        variables all instance translations require.
+        """
+        base_vars = {
+            self._make_var_name("vmName"): self._name,
+        }
+
+        # check if we need to add a variable for the network interface we may
+        # need to later create for the VM:
+        if not self._get_network_interfaces():
+            base_vars.update({
+                "nicName_VM_%s" % self._name: "nic_VM_%s" % self._name,
+                "virtualNetwork_VM_%s_ref" % self._name:
+                    "[resourceId('Microsoft.Network/virtualNetworks', "
+                    "parameters('virtualNetworkName_VM_%s'))]" %
+                    self._name,
+                "subnet_VM_%s_ref" % self._name:
+                "[concat(variables('virtualNetwork_VM_%s_ref'),"
+                "'/subnets/',parameters('subnetName_VM_%s'))]" %
+                (self._name, self._name)
+            })
+
+        return base_vars
 
     def _get_ref_port_resource_names(self):
         """ _get_ref_port_resource_names is a helper method which returns a
@@ -151,8 +210,18 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
 
         network_interfaces = self._get_network_interfaces()
         if network_interfaces:
+            # specify the found interfaces:
             vm_properties["networkProfile"].update({
                 "networkInterfaces": self._get_network_interfaces(),
+            })
+        else:
+            # else; provide the default which will be added later
+            # in get_resource_data:
+            vm_properties["networkProfile"].update({
+                "networkInterfaces": [{
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces', "
+                          "variables('nicName_VM_%s'))]" % self._name
+                }]
             })
 
         vm_properties.update({
@@ -169,10 +238,21 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             "parameters('newStorageAccountName'))]"
         ]
 
+        # check if there are any network interfaces already defined to add:
         for port_resource_name in self._get_ref_port_resource_names():
             depends_on.append(
                 "[concat('Microsoft.Network/networkInterfaces/', "
                 "variables('nicName_%s'))]" % port_resource_name)
+
+        # else, add the default one which will be specially created for the VM:
+        if not self._get_network_interfaces():
+            depends_on.extend([
+                "[concat('Microsoft.Network/networkInterfaces/', "
+                "variables('nicName_VM_%s'))]" % self._name,
+                "[concat('Microsoft.Network/virtualNetworks/', "
+                "parameters('virtualNetworkName_VM_%s'))]" %
+                self._name
+            ])
 
         return depends_on
 
@@ -181,13 +261,64 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
-        resource_data = {
+        resource_data = [{
             "apiVersion": ARM_API_2015_05_01_PREVIEW,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
             "properties": self._get_vm_properties(),
             "dependsOn": self.get_dependencies(),
-        }
+        }]
 
-        return [resource_data]
+        # if the VM has no previously-defined network interfaces;
+        if not self._get_network_interfaces():
+            resource_data.extend([
+                {
+                    "name": "[parameters('virtualNetworkName_VM_%s')]" %
+                            self._name,
+                    "type": "Microsoft.Network/virtualNetworks",
+                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
+                    "location": "[variables('location')]",
+                    "properties": {
+                        "addressSpace": {
+                            "addressPrefixes": [
+                                "[parameters('subnetAddressPrefix_VM_%s')]" %
+                                self._name
+                            ]
+                        },
+                        "subnets": [{
+                            "name": "[parameters('subnetName_VM_%s')]" %
+                                    self._name,
+                            "properties": {
+                                "addressPrefix": "[parameters('"
+                                                 "subnetAddressPrefix_VM_%s')]"
+                                                 % self._name
+                            }
+                        }]
+                    }
+                },
+                {
+                    "name": "[variables('nicName_VM_%s')]" % self._name,
+                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
+                    "location": "[variables('location')]",
+                    "type": "Microsoft.Network/networkInterfaces",
+                    "dependsOn": [
+                        "[concat('Microsoft.Network/virtualNetworks/', "
+                        "parameters('virtualNetworkName_VM_%s'))]" %
+                        self._name
+                    ],
+                    "properties": {
+                        "ipConfigurations": [{
+                            "name": "ipConfig_nic_VM_%s" % self._name,
+                            "properties": {
+                                "subnet": {
+                                    "id": "[variables('subnet_VM_%s_ref')]" %
+                                          self._name
+                                },
+                                "privateIPAllocationMethod": "Dynamic",
+                            }
+                        }]
+                    }
+                }])
+
+        return resource_data
