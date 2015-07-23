@@ -1,5 +1,6 @@
-pbr>=0.10,<1.0
-heat
+# NOTE: also requires Heat itself; which must be installed manually:
+# https://github.com/openstack/heat
+pbr
 oslo.config
 PyYAML
 jsonschema
