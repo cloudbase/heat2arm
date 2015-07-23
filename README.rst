@@ -54,11 +54,6 @@ directly start testing it on some of the provided sample templates:
 ::
   heat2arm --in samples/servers_in_new_neutron_net.yaml
 
-If you system says it cannot find the executable; you could alternatively run
-the main entry point of the module manually:
-::
-  python ./heat2arm/main.py --in samples/servers_in_new_neutron_net.yaml
-
 Moving forward:
 ^^^^^^^^^^^^^^^
 
