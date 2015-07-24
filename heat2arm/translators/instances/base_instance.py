@@ -20,7 +20,7 @@
 
 import json
 
-from heat2arm.constants import ARM_API_2015_05_01_PREVIEW
+from heat2arm.constants import ARM_API_VERSION
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -262,7 +262,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         resulting ARM template for this resource.
         """
         resource_data = [{
-            "apiVersion": ARM_API_2015_05_01_PREVIEW,
+            "apiVersion": ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
@@ -277,7 +277,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                     "name": "[parameters('virtualNetworkName_VM_%s')]" %
                             self._name,
                     "type": "Microsoft.Network/virtualNetworks",
-                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
+                    "apiVersion": ARM_API_VERSION,
                     "location": "[variables('location')]",
                     "properties": {
                         "addressSpace": {
@@ -299,7 +299,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 },
                 {
                     "name": "[variables('nicName_VM_%s')]" % self._name,
-                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
+                    "apiVersion": ARM_API_VERSION,
                     "location": "[variables('location')]",
                     "type": "Microsoft.Network/networkInterfaces",
                     "dependsOn": [

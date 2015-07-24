@@ -169,7 +169,7 @@ def get_storage_account_resource():
     resource = {
         "type": "Microsoft.Storage/storageAccounts",
         "name": "[parameters('newStorageAccountName')]",
-        "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
+        "apiVersion": constants.ARM_API_VERSION,
         "location": "[variables('location')]",
         "properties": {
             "accountType": "[variables('storageAccountType')]"
