@@ -30,6 +30,11 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
     heat_resource_type = "OS::Neutron::Port"
     arm_resource_type = "Microsoft.Network/networkInterfaces"
 
+    # NOTE: the following are inherited from BaseNICARMTranslator:
+    #   - get_variables
+    #   - get_dependencies
+    #   - get_resource_data
+
     def _get_floating_ip_resource_name(self):
         """ _get_floating_ip_resource_name is a helper function which
         returns the name of the floating IP resource associated to
@@ -46,9 +51,5 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         """ _get_ref_network is a helper function which returns the name
         of the network which references this NIC-like resource.
         """
-        return get_ref_heat_resource(self._heat_resource, "network_id")
-
-    # NOTE: the following are inherited from BaseNICARMTranslator:
-    #   - get_variables
-    #   - get_dependencies
-    #   - get_resource_data
+        if "network_id" in self._heat_resource.properties.data:
+            return get_ref_heat_resource(self._heat_resource, "network_id")

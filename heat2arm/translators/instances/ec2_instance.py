@@ -67,10 +67,19 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         port_resource_names = []
 
         for resource in self._heat_resource.stack.iter_resources():
-            # TODO: EC2 EIP Assocs here?
+            # NOTE: because you can define both Neutron networking resources
+            # and AWS ones in heat templates; we must check for both here:
             if (resource.type() == "OS::Neutron::Port"
                     and "device_id" in resource.properties.data
                     and resource.properties.data["device_id"] == self._name):
+                port_resource_names.append({
+                    "id":
+                        "[resourceId('Microsoft.Network/networkInterfaces'"
+                        ", variables('nicName_%s'))]" % resource.name
+                })
+            if (resource.type() == "AWS::EC2::EIP"
+                    and "InstanceId" in resource.properties.data
+                    and resource.properties.data["InstanceId"] == self._name):
                 port_resource_names.append({
                     "id":
                         "[resourceId('Microsoft.Network/networkInterfaces'"

@@ -122,7 +122,7 @@ def get_arm_template(resources, location=CONF.default_azure_location):
     })
     resources_data = []
 
-    # This is the storage for local disks, there's no OpenStack equivalent
+    # This is the storage for local disks, there's no OpenStack equivalent.
     (storage_parameters,
      storage_variables,
      storage_resource) = get_storage_account_resource()
@@ -130,6 +130,15 @@ def get_arm_template(resources, location=CONF.default_azure_location):
     parameters_data.update(storage_parameters)
     variables_data.update(storage_variables)
     resources_data.append(storage_resource)
+
+    # Add the default VN resource:
+    (vn_parameters,
+     vn_variables,
+     vn_resource) = get_virtual_network_resource()
+
+    parameters_data.update(vn_parameters)
+    variables_data.update(vn_variables)
+    resources_data.append(vn_resource)
 
     for resource in resources:
         variables_data.update(resource.get_variables())
@@ -174,6 +183,51 @@ def get_storage_account_resource():
         "properties": {
             "accountType": "[variables('storageAccountType')]"
         }
+    }
+
+    return (parameters, variables, resource)
+
+def get_virtual_network_resource():
+    """ get_virtual_network_resource returns the default virtual network
+    resource which will be used for networking-related operations.
+    """
+    parameters = {
+        "newVirtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Virtual Network to be created"
+                               "for this deployment."
+            }
+        }
+    }
+
+    variables = {
+        "newVirtualNetworkRef": "[resourceId('Microsoft.Network"
+                                "/virtualNetworks', parameters("
+                                "'newVirtualNetworkName'))]",
+        "defaultSubnetName": "defaultVNSubnet",
+        "defaultSubnetRef": "[concat(variables('newVirtualNetworkRef'),"
+                            "'/subnets/',variables('defaultSubnetName'))]"
+    }
+
+    resource = {
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[parameters('newVirtualNetworkName')]",
+        "apiVersion": constants.ARM_API_VERSION,
+        "location": "[variables('location')]",
+        "properties": {
+            "subnets": [{
+                "name": "[variables('defaultSubnetName')]",
+                "properties": {
+                    "addressPrefix": "10.0.0.0/24"
+                }
+            }],
+            "addressSpace": {
+                "addressPrefixes": [
+                    "10.0.0.0/24"
+                ]
+            }
+        },
     }
 
     return (parameters, variables, resource)
