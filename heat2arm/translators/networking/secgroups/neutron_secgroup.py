@@ -64,7 +64,8 @@ class NeutronSecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                         # NOTE: defaulted to *:
                         "destinationAddressPrefix": "*",
                         "access": "Allow",
-                        "direction": direction
+                        "direction": direction,
+                        "priority": 100 + i
                     }
                 }
 

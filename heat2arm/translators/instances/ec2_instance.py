@@ -72,19 +72,11 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
             if (resource.type() == "OS::Neutron::Port"
                     and "device_id" in resource.properties.data
                     and resource.properties.data["device_id"] == self._name):
-                port_resource_names.append({
-                    "id":
-                        "[resourceId('Microsoft.Network/networkInterfaces'"
-                        ", variables('nicName_%s'))]" % resource.name
-                })
-            if (resource.type() == "AWS::EC2::EIP"
+                port_resource_names.append(resource.name)
+            if (resource.type() == "AWS::EC2::EIPAssociation"
                     and "InstanceId" in resource.properties.data
                     and resource.properties.data["InstanceId"] == self._name):
-                port_resource_names.append({
-                    "id":
-                        "[resourceId('Microsoft.Network/networkInterfaces'"
-                        ", variables('nicName_%s'))]" % resource.name
-                })
+                port_resource_names.append(resource.name)
 
         return port_resource_names
 

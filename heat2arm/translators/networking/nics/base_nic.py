@@ -60,12 +60,17 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         floating_ip_resource_name = self._get_floating_ip_resource_name()
 
         heat_net_resource = self._get_ref_network()
-        net_name = heat_net_resource.name
-
-        dependencies = [
-            "[concat('Microsoft.Network/virtualNetworks/', "
-            "variables('virtualNetworkName_%s'))]" % net_name
-        ]
+        if heat_net_resource:
+            net_name = heat_net_resource.name
+            dependencies = [
+                "[concat('Microsoft.Network/virtualNetworks/', "
+                "variables('virtualNetworkName_%s'))]" % net_name
+            ]
+        else:
+            dependencies = [
+                "[concat('Microsoft.Network/virtualNetworks/', "
+                "parameters('newVirtualNetworkName'))]"
+            ]
 
         if floating_ip_resource_name:
             dependencies.append(
@@ -81,13 +86,17 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         which is directly serializable into ARM template format.
         """
         heat_net_resource = self._get_ref_network()
-        net_name = heat_net_resource.name
+        if heat_net_resource:
+            net_name = heat_net_resource.name
+            subnet_id = ("[variables('virtualNetworkSubnetName_ref_%s')]" %
+                         net_name)
+        else:
+            subnet_id = "[variables('defaultSubnetRef')]"
 
         nic_properties_data = {
             "privateIPAllocationMethod": "Dynamic",
             "subnet": {
-                "id":
-                "[variables('virtualNetworkSubnetName_ref_%s')]" % net_name
+                "id": subnet_id
             }
         }
 
