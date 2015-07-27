@@ -20,7 +20,7 @@
 
 import json
 
-from heat2arm.constants import ARM_API_2015_05_01_PREVIEW
+from heat2arm.constants import ARM_API_VERSION
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -38,7 +38,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         It returns a dict containing a user name and password parameters, and
         optionally the paramters for a VN and subnet if one is required.
         """
-        base_params = {
+        return {
             "adminUsername": {
                 "type": "string",
                 "metadata": {
@@ -53,39 +53,6 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             }
         }
 
-        # check if there are any networkInterface-like resources attached to
-        # this VM; if none, add a parameter for the virtual network name this
-        # instance should be attached to which will be used later.
-        if not self._get_network_interfaces():
-            base_params.update({
-                "virtualNetworkName_VM_%s" % self._name: {
-                    "type": "string",
-                    "metadata": {
-                        "description": "Name for a virtual network which will "
-                                       "be created for VM '%s' to be added to."
-                                       % self._name
-                    }
-                },
-                "subnetName_VM_%s" % self._name: {
-                    "type": "string",
-                    "metadata": {
-                        "description": "Name for a subnet of the provided "
-                                       "virtual network for VM '%s' to be"
-                                       "added in." % self._name
-                    }
-                },
-                "subnetAddressPrefix_VM_%s" % self._name: {
-                    "type": "string",
-                    "metadata": {
-                        "description": "Address space for the provided subnet "
-                                       "for VM '%s' to be attached to." %
-                                       self._name,
-                    }
-                }
-            })
-
-        return base_params
-
     def _get_base_variables(self):
         """ _get_base_variables is a helper method which retuns the list of
         variables all instance translations require.
@@ -99,14 +66,6 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         if not self._get_network_interfaces():
             base_vars.update({
                 "nicName_VM_%s" % self._name: "nic_VM_%s" % self._name,
-                "virtualNetwork_VM_%s_ref" % self._name:
-                    "[resourceId('Microsoft.Network/virtualNetworks', "
-                    "parameters('virtualNetworkName_VM_%s'))]" %
-                    self._name,
-                "subnet_VM_%s_ref" % self._name:
-                "[concat(variables('virtualNetwork_VM_%s_ref'),"
-                "'/subnets/',parameters('subnetName_VM_%s'))]" %
-                (self._name, self._name)
             })
 
         return base_vars
@@ -200,7 +159,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 "dataDisks": volumes
             })
 
-        # add the networking and the userdata, if applicable:
+        # add the userData:
         os_profile_data = self._get_base_os_profile_data()
 
         user_data = self._get_userdata()
@@ -208,6 +167,11 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             os_profile_data["customData"] = (
                 "[base64('%s')]" % json.dumps(user_data))
 
+        vm_properties.update({
+            "osProfile": os_profile_data,
+        })
+
+        # add the network interface(s):
         network_interfaces = self._get_network_interfaces()
         if network_interfaces:
             # specify the found interfaces:
@@ -215,8 +179,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 "networkInterfaces": self._get_network_interfaces(),
             })
         else:
-            # else; provide the default which will be added later
-            # in get_resource_data:
+            # else; add the default virtual network we will create later:
             vm_properties["networkProfile"].update({
                 "networkInterfaces": [{
                     "id": "[resourceId('Microsoft.Network/networkInterfaces', "
@@ -224,9 +187,6 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 }]
             })
 
-        vm_properties.update({
-            "osProfile": os_profile_data,
-        })
         return vm_properties
 
     def get_dependencies(self):
@@ -247,11 +207,10 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         # else, add the default one which will be specially created for the VM:
         if not self._get_network_interfaces():
             depends_on.extend([
+                "[concat('Microsoft.Network/virtualNetworks/', "
+                "parameters('newVirtualNetworkName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', "
                 "variables('nicName_VM_%s'))]" % self._name,
-                "[concat('Microsoft.Network/virtualNetworks/', "
-                "parameters('virtualNetworkName_VM_%s'))]" %
-                self._name
             ])
 
         return depends_on
@@ -262,7 +221,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         resulting ARM template for this resource.
         """
         resource_data = [{
-            "apiVersion": ARM_API_2015_05_01_PREVIEW,
+            "apiVersion": ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
@@ -271,49 +230,24 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         }]
 
         # if the VM has no previously-defined network interfaces;
+        # add a new one to link it to the default network:
         if not self._get_network_interfaces():
             resource_data.extend([
                 {
-                    "name": "[parameters('virtualNetworkName_VM_%s')]" %
-                            self._name,
-                    "type": "Microsoft.Network/virtualNetworks",
-                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
-                    "location": "[variables('location')]",
-                    "properties": {
-                        "addressSpace": {
-                            "addressPrefixes": [
-                                "[parameters('subnetAddressPrefix_VM_%s')]" %
-                                self._name
-                            ]
-                        },
-                        "subnets": [{
-                            "name": "[parameters('subnetName_VM_%s')]" %
-                                    self._name,
-                            "properties": {
-                                "addressPrefix": "[parameters('"
-                                                 "subnetAddressPrefix_VM_%s')]"
-                                                 % self._name
-                            }
-                        }]
-                    }
-                },
-                {
                     "name": "[variables('nicName_VM_%s')]" % self._name,
-                    "apiVersion": ARM_API_2015_05_01_PREVIEW,
+                    "apiVersion": ARM_API_VERSION,
                     "location": "[variables('location')]",
                     "type": "Microsoft.Network/networkInterfaces",
                     "dependsOn": [
                         "[concat('Microsoft.Network/virtualNetworks/', "
-                        "parameters('virtualNetworkName_VM_%s'))]" %
-                        self._name
+                        "parameters('newVirtualNetworkName'))]"
                     ],
                     "properties": {
                         "ipConfigurations": [{
                             "name": "ipConfig_nic_VM_%s" % self._name,
                             "properties": {
                                 "subnet": {
-                                    "id": "[variables('subnet_VM_%s_ref')]" %
-                                          self._name
+                                    "id": "[variables('defaultSubnetRef')]"
                                 },
                                 "privateIPAllocationMethod": "Dynamic",
                             }

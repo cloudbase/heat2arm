@@ -45,12 +45,13 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                     "properties": {
                         "protocol": in_rule["IpProtocol"],
                         "sourcePortRange": in_rule["FromPort"],
-                        "destionationPortRange": in_rule["ToPort"],
+                        "destinationPortRange": in_rule["ToPort"],
                         "sourceAddressPrefix": in_rule["CidrIp"],
                         "destinationAddressPrefix": "*",
-                        "access": "Inbound",
+                        "direction": "Inbound",
+                        "access": "Allow",
                         # NOTE: priority is always fixed.
-                        "priority": 100,
+                        "priority": 100 + i,
                     }
                 }
 
@@ -67,12 +68,13 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                     "properties": {
                         "protocol": out_rule["IpProtocol"],
                         "sourcePortRange": out_rule["FromPort"],
-                        "destionationPortRange": out_rule["ToPort"],
+                        "destinationPortRange": out_rule["ToPort"],
                         "sourceAddressPrefix": out_rule["CidrIp"],
                         "destinationAddressPrefix": "*",
-                        "access": "Outbound",
+                        "direction": "Outbound",
+                        "access": "Allow",
                         # NOTE: priority is always fixed.
-                        "priority": 100,
+                        "priority": 100 + i,
                     }
                 }
 

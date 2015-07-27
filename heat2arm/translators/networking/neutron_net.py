@@ -85,7 +85,7 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
         net_name = heat_net_resource.name
 
         return [{
-            "apiVersion": constants.ARM_API_2015_05_01_PREVIEW,
+            "apiVersion": constants.ARM_API_VERSION,
             "type": "Microsoft.Network/virtualNetworks",
             "name":
             "[variables('virtualNetworkName_%s')]" % net_name,

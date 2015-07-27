@@ -14,12 +14,15 @@
 #    under the License.
 
 """
-    General constants.
+    Definitions of various Azure-related constants.
 """
 
-# ARM_API_2015_05_01_PREVIEW is the version of the ARM API to be used:
 ARM_API_2015_05_01_PREVIEW = "2015-05-01-preview"
+ARM_SCHEMA_URL_2015_01_01 = ("https://schema.management.azure.com/schemas/"
+                             "2015-01-01/deploymentTemplate.json#")
+
+# the version of the API to be used in all definitions:
+ARM_API_VERSION = ARM_API_2015_05_01_PREVIEW
 
 # ARM_SCHEMA_URL is the default URL for fetching the ARM template JSON schema:
-ARM_SCHEMA_URL = ("https://schema.management.azure.com/schemas/"
-                  "2015-01-01/deploymentTemplate.json#")
+ARM_SCHEMA_URL = ARM_SCHEMA_URL_2015_01_01
