@@ -18,6 +18,7 @@
 """
 
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators import global_constants
 
 
 class BaseVolumeARMTranslator(BaseHeatARMTranslator):
@@ -29,6 +30,10 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
     """
     heat_resource_type = None
     arm_resource_type = None
+
+    def __init__(self, heat_resource):
+        global_constants.NEW_STORAGE_ACC_REQUIRED = True
+        super(BaseVolumeARMTranslator, self).__init__(heat_resource)
 
     def get_parameters(self):
         """ get_parameters returns the dict with the size parameter that all

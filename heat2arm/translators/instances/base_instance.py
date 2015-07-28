@@ -22,6 +22,7 @@ import json
 
 from heat2arm.constants import ARM_API_VERSION
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators import global_constants
 
 
 class BaseInstanceARMTranslator(BaseHeatARMTranslator):
@@ -30,6 +31,10 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
     implementations to facilitate inheriting instance translators.
     """
     arm_resource_type = "Microsoft.Compute/virtualMachines"
+
+    def __init__(self, heat_resource):
+        global_constants.NEW_STORAGE_ACC_REQUIRED = True
+        super(BaseInstanceARMTranslator, self).__init__(heat_resource)
 
     def get_parameters(self):
         """ get_parameters is a sensible override of the method of the Base
@@ -232,6 +237,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         # if the VM has no previously-defined network interfaces;
         # add a new one to link it to the default network:
         if not self._get_network_interfaces():
+            global_constants.NEW_VIRTUAL_NETWORK_REQUIRED = True
             resource_data.extend([
                 {
                     "name": "[variables('nicName_VM_%s')]" % self._name,

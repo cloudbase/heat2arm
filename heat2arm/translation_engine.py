@@ -31,6 +31,7 @@ from heat.engine import template
 from heat.tests import utils as test_utils
 
 from heat2arm import constants
+from heat2arm.translators import global_constants
 from heat2arm.translators import instances
 from heat2arm.translators import networking
 from heat2arm.translators import storage
@@ -122,28 +123,31 @@ def get_arm_template(resources, location=CONF.default_azure_location):
     })
     resources_data = []
 
-    # This is the storage for local disks, there's no OpenStack equivalent.
-    (storage_parameters,
-     storage_variables,
-     storage_resource) = get_storage_account_resource()
-
-    parameters_data.update(storage_parameters)
-    variables_data.update(storage_variables)
-    resources_data.append(storage_resource)
-
-    # Add the default VN resource:
-    (vn_parameters,
-     vn_variables,
-     vn_resource) = get_virtual_network_resource()
-
-    parameters_data.update(vn_parameters)
-    variables_data.update(vn_variables)
-    resources_data.append(vn_resource)
-
+    # run each resource through the translation process:
     for resource in resources:
         variables_data.update(resource.get_variables())
         resources_data += resource.get_resource_data()
         parameters_data.update(resource.get_parameters())
+
+    # add default storage account, if required:
+    if global_constants.NEW_STORAGE_ACC_REQUIRED:
+        (storage_parameters,
+         storage_variables,
+         storage_resource) = get_storage_account_resource()
+
+        parameters_data.update(storage_parameters)
+        variables_data.update(storage_variables)
+        resources_data.append(storage_resource)
+
+    # add default VN, if required:
+    if global_constants.NEW_VIRTUAL_NETWORK_REQUIRED:
+        (vn_parameters,
+         vn_variables,
+         vn_resource) = get_virtual_network_resource()
+
+        parameters_data.update(vn_parameters)
+        variables_data.update(vn_variables)
+        resources_data.append(vn_resource)
 
     template_data = {
         "$schema": constants.ARM_SCHEMA_URL,
