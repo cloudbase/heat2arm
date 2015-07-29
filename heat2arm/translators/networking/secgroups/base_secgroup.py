@@ -68,7 +68,7 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
-        return [{
+        return {
             "apiVersion": ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": ("[variables('secGroupName_%s')]" %
@@ -77,4 +77,4 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
             "properties": {
                 "securityRules": self._get_rules()
             }
-        }]
+        }

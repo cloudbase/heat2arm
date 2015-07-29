@@ -18,7 +18,6 @@
 """
 
 from heat2arm.translators.base import get_ref_heat_resource
-from heat2arm.translators import global_constants
 from heat2arm.translators.networking.nics.base_nic import BaseNICARMTranslator
 
 
@@ -56,4 +55,4 @@ class EC2eipAssocARMTranslator(BaseNICARMTranslator):
         else:
             # the resulting Azure network interface will be attached to the
             # default VN whose creation must be signaled here:
-            global_constants.NEW_VIRTUAL_NETWORK_REQUIRED = True
+            self._context.set_virtual_network_required()

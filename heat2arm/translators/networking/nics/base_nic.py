@@ -108,7 +108,7 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
                       floating_ip_resource_name
             }
 
-        return [{
+        return {
             "apiVersion": ARM_API_VERSION,
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicName_%s')]" % self._name,
@@ -120,4 +120,4 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
                     "properties": nic_properties_data,
                 }]
             }
-        }]
+        }

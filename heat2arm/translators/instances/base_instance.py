@@ -22,7 +22,6 @@ import json
 
 from heat2arm.constants import ARM_API_VERSION
 from heat2arm.translators.base import BaseHeatARMTranslator
-from heat2arm.translators import global_constants
 
 
 class BaseInstanceARMTranslator(BaseHeatARMTranslator):
@@ -32,9 +31,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
     """
     arm_resource_type = "Microsoft.Compute/virtualMachines"
 
-    def __init__(self, heat_resource):
-        global_constants.NEW_STORAGE_ACC_REQUIRED = True
-        super(BaseInstanceARMTranslator, self).__init__(heat_resource)
+    def __init__(self, heat_resource, context):
+        super(BaseInstanceARMTranslator, self).__init__(heat_resource, context)
+        self._context.set_storage_account_required()
 
     def get_parameters(self):
         """ get_parameters is a sensible override of the method of the Base
@@ -62,18 +61,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ _get_base_variables is a helper method which retuns the list of
         variables all instance translations require.
         """
-        base_vars = {
+        return {
             self._make_var_name("vmName"): self._name,
         }
-
-        # check if we need to add a variable for the network interface we may
-        # need to later create for the VM:
-        if not self._get_network_interfaces():
-            base_vars.update({
-                "nicName_VM_%s" % self._name: "nic_VM_%s" % self._name,
-            })
-
-        return base_vars
 
     def _get_ref_port_resource_names(self):
         """ _get_ref_port_resource_names is a helper method which returns a
@@ -111,6 +101,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                 "id": "[resourceId('Microsoft.Network/networkInterfaces', "
                       "variables('nicName_%s'))]" % port_resource_name
             })
+
+        if not network_interfaces_data:
+            self._context.set_virtual_network_required()
 
         return network_interfaces_data
 
@@ -177,20 +170,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         })
 
         # add the network interface(s):
-        network_interfaces = self._get_network_interfaces()
-        if network_interfaces:
-            # specify the found interfaces:
-            vm_properties["networkProfile"].update({
-                "networkInterfaces": self._get_network_interfaces(),
-            })
-        else:
-            # else; add the default virtual network we will create later:
-            vm_properties["networkProfile"].update({
-                "networkInterfaces": [{
-                    "id": "[resourceId('Microsoft.Network/networkInterfaces', "
-                          "variables('nicName_VM_%s'))]" % self._name
-                }]
-            })
+        vm_properties["networkProfile"].update({
+            "networkInterfaces": self._get_network_interfaces(),
+        })
 
         return vm_properties
 
@@ -203,20 +185,10 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             "parameters('newStorageAccountName'))]"
         ]
 
-        # check if there are any network interfaces already defined to add:
         for port_resource_name in self._get_ref_port_resource_names():
             depends_on.append(
                 "[concat('Microsoft.Network/networkInterfaces/', "
                 "variables('nicName_%s'))]" % port_resource_name)
-
-        # else, add the default one which will be specially created for the VM:
-        if not self._get_network_interfaces():
-            depends_on.extend([
-                "[concat('Microsoft.Network/virtualNetworks/', "
-                "parameters('newVirtualNetworkName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', "
-                "variables('nicName_VM_%s'))]" % self._name,
-            ])
 
         return depends_on
 
@@ -225,40 +197,67 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
-        resource_data = [{
+        return {
             "apiVersion": ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
             "properties": self._get_vm_properties(),
             "dependsOn": self.get_dependencies(),
-        }]
+        }
 
-        # if the VM has no previously-defined network interfaces;
-        # add a new one to link it to the default network:
-        if not self._get_network_interfaces():
-            global_constants.NEW_VIRTUAL_NETWORK_REQUIRED = True
-            resource_data.extend([
-                {
-                    "name": "[variables('nicName_VM_%s')]" % self._name,
-                    "apiVersion": ARM_API_VERSION,
-                    "location": "[variables('location')]",
-                    "type": "Microsoft.Network/networkInterfaces",
-                    "dependsOn": [
-                        "[concat('Microsoft.Network/virtualNetworks/', "
-                        "parameters('newVirtualNetworkName'))]"
-                    ],
+    def update_context(self):
+        """ update_context updates the context to add the necessary parameters,
+        variables and resource data required for the definition of the
+        networkInterface required to attach this VM to the default VN (if
+        applicable).
+        """
+        if self._get_network_interfaces():
+            # nothing to do; can return now:
+            return
+
+        self._context.add_variables({
+            "nicName_VM_%s" % self._name: "nic_VM_%s" % self._name,
+        })
+
+        res = self._context.get_resource({
+            "name": "[variables('vmName_%s')]" % self._heat_resource.name,
+            "type": self.arm_resource_type
+        })
+
+        # add the default VN and the NIC as dependencies:
+        res["dependsOn"].extend([
+            "[concat('Microsoft.Network/virtualNetworks/', "
+            "parameters('newVirtualNetworkName'))]",
+            "[concat('Microsoft.Network/networkInterfaces/', "
+            "variables('nicName_VM_%s'))]" % self._name
+        ])
+
+        res["properties"]["networkProfile"].update({
+            "networkInterfaces": [{
+                "id": "[resourceId('Microsoft.Network/networkInterfaces', "
+                      "variables('nicName_VM_%s'))]" % self._name
+            }]
+        })
+
+        self._context.add_resource({
+            "name": "[variables('nicName_VM_%s')]" % self._name,
+            "apiVersion": ARM_API_VERSION,
+            "location": "[variables('location')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', "
+                "parameters('newVirtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [{
+                    "name": "ipConfig_nic_VM_%s" % self._name,
                     "properties": {
-                        "ipConfigurations": [{
-                            "name": "ipConfig_nic_VM_%s" % self._name,
-                            "properties": {
-                                "subnet": {
-                                    "id": "[variables('defaultSubnetRef')]"
-                                },
-                                "privateIPAllocationMethod": "Dynamic",
-                            }
-                        }]
+                        "subnet": {
+                            "id": "[variables('defaultSubnetRef')]"
+                        },
+                        "privateIPAllocationMethod": "Dynamic",
                     }
-                }])
-
-        return resource_data
+                }]
+            }
+        })

@@ -36,9 +36,10 @@ class BaseHeatARMTranslator(object):
     heat_resource_type = None
     arm_resource_type = None
 
-    def __init__(self, heat_resource):
+    def __init__(self, heat_resource, context):
         self._heat_resource = heat_resource
         self._name = self._heat_resource.name
+        self._context = context
 
     def _make_var_name(self, var):
         """ _get_var_name is a helper method which constructs the
@@ -70,4 +71,24 @@ class BaseHeatARMTranslator(object):
         representing the resource which can be directly serialized
         into the resulting ARM template format.
         """
-        return []
+        return {}
+
+    def update_context(self):
+        """ update_context applies any changes necessary for the completeness
+        of the resource's translation over the parameters, variables and
+        resources stored within the context.
+
+        NOTE: it should be called after translate to ensure the resources which
+        must be updated from the context have already been translated.
+        """
+        pass
+
+    def translate(self):
+        """ translate is the main method of a translator; it adds all the
+        required parameters, variables and resource data to the context.
+        """
+        self._context.add_parameters(self.get_parameters())
+        self._context.add_variables(self.get_variables())
+        res = self.get_resource_data()
+        if res:
+            self._context.add_resource(res)

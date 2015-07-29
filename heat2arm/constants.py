@@ -26,3 +26,17 @@ ARM_API_VERSION = ARM_API_2015_05_01_PREVIEW
 
 # ARM_SCHEMA_URL is the default URL for fetching the ARM template JSON schema:
 ARM_SCHEMA_URL = ARM_SCHEMA_URL_2015_01_01
+
+# ARM_TEMPLATE_VERSION is the version the resulting template will be on:
+ARM_TEMPLATE_VERSION = "1.0.0.0"
+
+# DEFAULT_STORAGE_ACCOUNT_TYPE is the default type for the storage account to
+# be created for the deployment if required.
+DEFAULT_STORAGE_ACCOUNT_TYPE = "Standard_LRS"
+
+# DEFAULT_STORAGE_CONTAINER_NAME is the default name for the
+# storage container to be used.
+DEFAULT_STORAGE_CONTAINER_NAME = "vhds"
+
+# DEFAULT_LOCATION is the default location to be used for the deployment.
+DEFAULT_LOCATION = "West US"

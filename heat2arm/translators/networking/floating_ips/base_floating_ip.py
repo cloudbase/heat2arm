@@ -54,7 +54,7 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         respresenting the resource which can directly be serialized
         into the resulting ARM template format.
         """
-        return [{
+        return {
             "apiVersion": ARM_API_VERSION,
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIPAddressName_%s')]" % self._name,
@@ -67,4 +67,4 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
                     "[parameters('dnsNameForPublicIP_%s')]" % self._name
                     }
                 }
-            }]
+            }

@@ -58,6 +58,7 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
     #   - get_parameters.
     #   - get_dependencies.
     #   - get_resource_data.
+    #   - update_context.
 
     def _get_ref_port_resource_names(self):
         """ _get_ref_port_resource_names is a helper method which returns a

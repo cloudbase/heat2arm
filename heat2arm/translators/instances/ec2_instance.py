@@ -18,7 +18,6 @@
 """
 
 from heat2arm.constants import ARM_API_VERSION
-from heat2arm.translators import global_constants
 from heat2arm.translators.instances import ec2_utils as utils
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
@@ -37,6 +36,8 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
 
     # NOTE:the following methods are inherited from BaseInstanceARMTranslator:
     #   - get_parameters.
+    #   - get_dependencies.
+    #   - get_resource_data.
 
     def get_variables(self):
         """ get_variables returns a dict of ARM template variables
@@ -57,56 +58,42 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
             self._make_var_name("imgSku"): sku,
         })
 
-        # check for the existence of an availability zone and add a
-        # variable with its name if required:
-        avail_zone = self._get_availability_zone()
-        if avail_zone and (avail_zone not in
-                           global_constants.AVAILABILITY_SET_NAMES):
-            base_vars.update({
-                "availabilitySetName_%s" % avail_zone:
-                    "availabilitySet_%s" % avail_zone
-            })
-
         return base_vars
 
-    def get_dependencies(self):
-        """ get_dependencies returns a list of all the dependencies
-        of the EC2 instance's translation.
+    def update_context(self):
+        """ update_context adds all the necessary parameters, variables and
+        resource data to the context required by this resource's translation.
         """
-        base_deps = super(EC2InstanceARMTranslator, self).get_dependencies()
+        super(EC2InstanceARMTranslator, self).update_context()
 
-        # check if the instance is in an availability zone and
-        # thus requires a resulting availability set:
+        res = self._context.get_resource({
+            "type": self.heat_resource_type,
+            "name": "[variables('vmName_%s')]" % self._heat_resource.name,
+        })
+
+        # check for the existence of an availability zone and add a
+        # variable for its name, list it as a dependency and add it:
         avail_zone = self._get_availability_zone()
         if avail_zone:
-            base_deps.append(
+            res["dependsOn"].append(
                 "[concat('Microsoft.Compute/availabilitySets/',"
                 "variables('availabilitySetName_%s'))]" % avail_zone
             )
 
-        return base_deps
+            if avail_zone not in self._context.availability_set_names:
+                self._context.add_variables({
+                    "availabilitySetName_%s" % avail_zone:
+                        "availabilitySet_%s" % avail_zone
+                })
 
-    def get_resource_data(self):
-        """ get_resource_data returns a list of the resource data this resource
-        will be translated to.
-        """
-        base_res_data = super(EC2InstanceARMTranslator,
-                              self).get_resource_data()
-
-        # check for the availability zone, and add it now, if required:
-        avail_zone = self._get_availability_zone()
-        if avail_zone and (avail_zone not in
-                           global_constants.AVAILABILITY_SET_NAMES):
-            base_res_data.append({
-                "apiVersion": ARM_API_VERSION,
-                "type": "Microsoft.Compute/availabilitySets",
-                "name": "[variables('availabilitySetName_%s')]" % avail_zone,
-                "location": "[variables('location')]",
-                "properties": {}
-            })
-            global_constants.AVAILABILITY_SET_NAMES.append(avail_zone)
-
-        return base_res_data
+                self._context.add_resource({
+                    "apiVersion": ARM_API_VERSION,
+                    "type": "Microsoft.Compute/availabilitySets",
+                    "name": "[variables('availabilitySetName_%s')]" %
+                            avail_zone,
+                    "location": "[variables('location')]",
+                    "properties": {}
+                })
 
     def _get_vm_properties(self):
         """ _get_vm_properties is a helper method which returns all the
