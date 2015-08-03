@@ -20,7 +20,7 @@
 
 import json
 
-from heat2arm.constants import ARM_API_VERSION
+from heat2arm import constants
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -182,14 +182,14 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
-        return {
-            "apiVersion": ARM_API_VERSION,
+        return [{
+            "apiVersion": constants.ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
             "properties": self._get_vm_properties(),
             "dependsOn": self.get_dependencies(),
-        }
+        }]
 
     def update_context(self):
         """ update_context updates the context to add the necessary parameters,
@@ -227,7 +227,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
 
         self._context.add_resource({
             "name": "[variables('nicName_VM_%s')]" % self._name,
-            "apiVersion": ARM_API_VERSION,
+            "apiVersion": constants.ARM_API_VERSION,
             "location": "[variables('location')]",
             "type": "Microsoft.Network/networkInterfaces",
             "dependsOn": [

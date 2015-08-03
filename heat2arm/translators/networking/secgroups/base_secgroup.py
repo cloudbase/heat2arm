@@ -18,7 +18,7 @@
     translations.
 """
 
-from heat2arm.constants import ARM_API_VERSION
+from heat2arm import constants
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -68,8 +68,8 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
-        return {
-            "apiVersion": ARM_API_VERSION,
+        return [{
+            "apiVersion": constants.ARM_API_VERSION,
             "type": self.arm_resource_type,
             "name": ("[variables('secGroupName_%s')]" %
                      self._heat_resource.name),
@@ -77,4 +77,4 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
             "properties": {
                 "securityRules": self._get_rules()
             }
-        }
+        }]

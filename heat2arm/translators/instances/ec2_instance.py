@@ -17,7 +17,7 @@
     Defines the translator and auxiliary functions for EC2 instances.
 """
 
-from heat2arm.constants import ARM_API_VERSION
+from heat2arm import constants
 from heat2arm.translators.instances import ec2_utils as utils
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
@@ -87,7 +87,7 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
                 })
 
                 self._context.add_resource({
-                    "apiVersion": ARM_API_VERSION,
+                    "apiVersion": constants.ARM_API_VERSION,
                     "type": "Microsoft.Compute/availabilitySets",
                     "name": "[variables('availabilitySetName_%s')]" %
                             avail_zone,

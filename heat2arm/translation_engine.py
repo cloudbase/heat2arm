@@ -138,8 +138,8 @@ def get_arm_template(resources):
     })
 
     return collections.OrderedDict([
-        ("$schema", constants.ARM_SCHEMA_URL),
         ("contentVersion", constants.ARM_TEMPLATE_VERSION),
+        ("$schema", constants.ARM_SCHEMA_URL),
         ("parameters", template_data["parameters"]),
         ("variables", template_data["variables"]),
         ("resources", template_data["resources"])

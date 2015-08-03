@@ -21,7 +21,7 @@
 
 from oslo_config import cfg
 
-from heat2arm.constants import ARM_API_VERSION, DEFAULT_LOCATION
+from heat2arm import constants
 
 
 class Context(object):
@@ -29,7 +29,7 @@ class Context(object):
     It holds and provides access to all already declared parameters, variables
     and resources, as well as some important aspects to be kept in mind.
     """
-    def __init__(self, location=DEFAULT_LOCATION):
+    def __init__(self, location=constants.DEFAULT_LOCATION):
         self.parameters = {}
         self.variables = {}
         self.resources = []
@@ -125,7 +125,7 @@ class Context(object):
         self.resources.append({
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[parameters('newStorageAccountName')]",
-            "apiVersion": ARM_API_VERSION,
+            "apiVersion": constants.ARM_API_VERSION,
             "location": "[variables('location')]",
             "properties": {
                 "accountType": "[variables('storageAccountType')]"
@@ -159,7 +159,7 @@ class Context(object):
         self.resources.append({
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('newVirtualNetworkName')]",
-            "apiVersion": ARM_API_VERSION,
+            "apiVersion": constants.ARM_API_VERSION,
             "location": "[variables('location')]",
             "properties": {
                 "subnets": [{

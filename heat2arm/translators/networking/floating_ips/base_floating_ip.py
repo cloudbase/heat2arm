@@ -17,7 +17,7 @@
     Defines the base translator for floating IP resource types.
 """
 
-from heat2arm.constants import ARM_API_VERSION
+from heat2arm import constants
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -54,8 +54,8 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         respresenting the resource which can directly be serialized
         into the resulting ARM template format.
         """
-        return {
-            "apiVersion": ARM_API_VERSION,
+        return [{
+            "apiVersion": constants.ARM_API_VERSION,
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIPAddressName_%s')]" % self._name,
             "location": "[variables('location')]",
@@ -67,4 +67,4 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
                     "[parameters('dnsNameForPublicIP_%s')]" % self._name
                     }
                 }
-            }
+            }]
