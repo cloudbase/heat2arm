@@ -148,28 +148,3 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
             return self._heat_resource.properties['UserData']
 
         return ""
-
-    def _get_attached_volumes(self):
-        """ Returns a list of all volumes attached to this instance.
-        """
-        lun = 0
-        volumes = []
-
-        for resource in self._heat_resource.stack.iter_resources():
-            if (resource.type() == "AWS::EC2::VolumeAttachment" and
-                    resource.properties.data["InstanceId"] == self._name):
-                volume_name = resource.properties.data["VolumeId"].args
-                volumes.append({
-                    "name": volume_name,
-                    "diskSizeGB": "[parameters('size_%s')]" %
-                                  volume_name,
-                    "lun": lun,
-                    "vhd": {
-                        "Uri": "[variables('diskUri_%s')]" %
-                               volume_name,
-                    },
-                    "createOption": "Empty"
-                })
-                lun = lun + 1
-
-        return volumes

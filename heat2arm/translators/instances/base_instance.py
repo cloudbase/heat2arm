@@ -74,14 +74,6 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """
         pass
 
-    def _get_attached_volumes(self):
-        """ _get_attached_volumes is a helper function which returns the list
-        of all volumes attached to the instance.
-
-        NOTE: it is stubbed and should be implemented by inheriting classes.
-        """
-        pass
-
     def _get_userdata(self):
         """ _get_userdata is a helper method which returns the userdata from
         the instance's definition, if any.
@@ -149,13 +141,6 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             },
             "networkProfile": {},
         }
-
-        # add any attached volumes, if applicable:
-        volumes = self._get_attached_volumes()
-        if volumes:
-            vm_properties["storageProfile"].update({
-                "dataDisks": volumes
-            })
 
         # add the userData:
         os_profile_data = self._get_base_os_profile_data()
