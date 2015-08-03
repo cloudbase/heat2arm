@@ -81,7 +81,7 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
         the ARM template format.
         """
         heat_net_resource = base.get_ref_heat_resource(
-            self._heat_resource, "network_id")
+            self._heat_resource, "network")
         net_name = heat_net_resource.name
 
         return [{

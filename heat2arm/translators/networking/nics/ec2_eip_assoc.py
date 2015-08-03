@@ -52,3 +52,7 @@ class EC2eipAssocARMTranslator(BaseNICARMTranslator):
         if "NetworkInterfaceId" in self._heat_resource.properties.data:
             return get_ref_heat_resource(self._heat_resource,
                                          "NetworkInterfaceId")
+        else:
+            # the resulting Azure network interface will be attached to the
+            # default VN whose creation must be signaled here:
+            self._context.set_virtual_network_required()

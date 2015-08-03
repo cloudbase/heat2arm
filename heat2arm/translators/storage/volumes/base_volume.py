@@ -30,6 +30,10 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
     heat_resource_type = None
     arm_resource_type = None
 
+    def __init__(self, heat_resource, context):
+        super(BaseVolumeARMTranslator, self).__init__(heat_resource, context)
+        self._context.set_storage_account_required()
+
     def get_parameters(self):
         """ get_parameters returns the dict with the size parameter that all
         volumes must have.

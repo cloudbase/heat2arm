@@ -26,6 +26,7 @@ import warnings
 from oslo_config import cfg
 import yaml
 
+from heat2arm import constants
 from heat2arm import translation_engine as engine
 
 LOG = logging.getLogger(__name__)
@@ -48,6 +49,10 @@ def _parse_args():
     parser.add_argument("--config-file",
                         help="Path to an optional configuration file",
                         type=str)
+    parser.add_argument("--api-version", dest="api_version",
+                        help="Optional Azure ARM API version string of "
+                        "the form YYYY-MM-DD[-preview].",
+                        type=str)
     return parser.parse_args()
 
 
@@ -69,6 +74,9 @@ def main():
     args = _parse_args()
     if args.config_file:
         CONF(["--config-file", args.config_file])
+
+    if args.api_version:
+        constants.ARM_API_VERSION = args.api_version
 
     heat_template_data = yaml.load(args.heat_template, Loader=yaml.BaseLoader)
     args.heat_template.close()
