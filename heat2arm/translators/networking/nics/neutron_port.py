@@ -51,5 +51,5 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         """ _get_ref_network is a helper function which returns the name
         of the network which references this NIC-like resource.
         """
-        if "network_id" in self._heat_resource.properties.data:
-            return get_ref_heat_resource(self._heat_resource, "network_id")
+        if "network" in self._heat_resource.properties.data:
+            return get_ref_heat_resource(self._heat_resource, "network")

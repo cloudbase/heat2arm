@@ -52,7 +52,7 @@ resources:
   private_subnet:
     type: OS::Neutron::Subnet
     properties:
-      network_id: { get_resource: private_net }
+      network: { get_resource: private_net }
       cidr: { get_param: private_net_cidr }
       gateway_ip: { get_param: private_net_gateway }
       allocation_pools:
