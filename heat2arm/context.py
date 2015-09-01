@@ -19,9 +19,7 @@
     which have already been declared.
 """
 
-from oslo_config import cfg
-
-from heat2arm import constants
+import heat2arm.constants as constants
 
 
 class Context(object):
@@ -29,7 +27,15 @@ class Context(object):
     It holds and provides access to all already declared parameters, variables
     and resources, as well as some important aspects to be kept in mind.
     """
-    def __init__(self, location=constants.DEFAULT_LOCATION):
+
+    def __init__(self, heat_resource_stack,
+                 location=constants.DEFAULT_LOCATION):
+        """ A Context object is created from the full heat resource stack and
+        an optional locaton parameter.
+        """
+        self.heat_resource_stack = heat_resource_stack
+        self.heat_resources = heat_resource_stack.values()
+
         self.parameters = {}
         self.variables = {}
         self.resources = []
@@ -101,6 +107,12 @@ class Context(object):
                    resource.items()):
                 return res
 
+    def get_ref_heat_resource(self, heat_resource, property_name):
+        """ get_ref_heat_resource
+        """
+        resource_name = heat_resource.properties[property_name]
+        return self.heat_resource_stack[resource_name]
+
     def __set_storage_account_resource(self):
         """ __set_storage_account_resource is a helper method which sets the
         parameters, variables and resource data for the default storage account
@@ -117,9 +129,9 @@ class Context(object):
         })
 
         self.variables.update({
-            'storageAccountType': cfg.CONF.default_azure_storage_account_type,
+            'storageAccountType': constants.DEFAULT_STORAGE_ACCOUNT_TYPE,
             "vmStorageAccountContainerName":
-                cfg.CONF.default_storage_container_name,
+                constants.DEFAULT_STORAGE_CONTAINER_NAME,
         })
 
         self.resources.append({

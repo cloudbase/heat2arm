@@ -119,16 +119,16 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         """
         port_resource_names = []
 
-        for resource in self._heat_resource.stack.iter_resources():
+        for resource in self._context.heat_resources:
             # NOTE: because you can define both Neutron networking resources
             # and AWS ones in heat templates; we must check for both here:
             if (resource.type() == "OS::Neutron::Port"
-                    and "device_id" in resource.properties.data
-                    and resource.properties.data["device_id"] == self._name):
+                    and "device_id" in resource.properties
+                    and resource.properties["device_id"] == self._name):
                 port_resource_names.append(resource.name)
             if (resource.type() == "AWS::EC2::EIPAssociation"
-                    and "InstanceId" in resource.properties.data
-                    and resource.properties.data["InstanceId"] == self._name):
+                    and "InstanceId" in resource.properties
+                    and resource.properties["InstanceId"] == self._name):
                 port_resource_names.append(resource.name)
 
         return port_resource_names

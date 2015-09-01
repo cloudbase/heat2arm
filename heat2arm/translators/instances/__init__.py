@@ -18,20 +18,7 @@
     Cloud Formation instance translators.
 """
 
-from oslo.config import cfg
-
 from heat2arm.translators.instances.ec2_instance import (
     EC2InstanceARMTranslator
 )
 from heat2arm.translators.instances.nova_server import NovaServerARMTranslator
-
-# Get the config instance and add options:
-CONF = cfg.CONF
-CONF.register_opts({
-    cfg.StrOpt(
-        "vm_default_size",
-        default="Basic_A1",
-        help="Default Azure size in case of an EC2 VM type "
-             "could not be mapped.",
-    ),
-})

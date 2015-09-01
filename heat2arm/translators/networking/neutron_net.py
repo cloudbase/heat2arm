@@ -22,10 +22,10 @@ https://azure.microsoft.com/en-gb/documentation/articles/resource-groups-network
 """
 
 from heat2arm import constants
-from heat2arm.translators import base
+from heat2arm.translators.base import BaseHeatARMTranslator
 
 
-class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
+class NeutronNetARMTranslator(BaseHeatARMTranslator):
     """ NeutronNetARMTranslator is the translator for Neutron networks.
 
     Despite not having a direct stand-alone equivalent;
@@ -55,7 +55,7 @@ class NeutronNetARMTranslator(base.BaseHeatARMTranslator):
         }
 
 
-class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
+class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
     """ NeutronSubnetARMTranslator is the translator associated
     to a Neutron subnet.
 
@@ -80,7 +80,7 @@ class NeutronSubnetARMTranslator(base.BaseHeatARMTranslator):
         representing the subnet which can be directly serialized into
         the ARM template format.
         """
-        heat_net_resource = base.get_ref_heat_resource(
+        heat_net_resource = self._context.get_ref_heat_resource(
             self._heat_resource, "network")
         net_name = heat_net_resource.name
 

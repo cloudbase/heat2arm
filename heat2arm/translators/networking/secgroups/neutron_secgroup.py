@@ -36,8 +36,8 @@ class NeutronSecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
         rules = []
 
         # traverse all the rules and add them:
-        if "rules" in self._heat_resource.properties.data:
-            for rule in self._heat_resource.properties.data["rules"]:
+        if "rules" in self._heat_resource.properties:
+            for rule in self._heat_resource.properties["rules"]:
                 # get the port range or default to *:
                 port_range = "*"
                 if "port_range_min" in rule and "port_range_max" in rule:

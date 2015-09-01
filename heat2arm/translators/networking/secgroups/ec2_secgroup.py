@@ -36,8 +36,8 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
         rules = []
 
         # traverse all ingress rules; if any:
-        if "SecurityGroupIngress" in self._heat_resource.properties.data:
-            for in_rule in self._heat_resource.properties.data[
+        if "SecurityGroupIngress" in self._heat_resource.properties:
+            for in_rule in self._heat_resource.properties[
                     "SecurityGroupIngress"]:
                 # build the rule:
                 rule = {
@@ -59,8 +59,8 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                 rules.append(rule)
 
         # traverse all egress rules; if any:
-        if "SecurityGroupEgress" in self._heat_resource.properties.data:
-            for out_rule in self._heat_resource.properties.data[
+        if "SecurityGroupEgress" in self._heat_resource.properties:
+            for out_rule in self._heat_resource.properties[
                     "SecurityGroupEgress"]:
                 # build the rule:
                 rule = {

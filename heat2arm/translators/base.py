@@ -18,14 +18,6 @@
 """
 
 
-def get_ref_heat_resource(heat_resource, property_name):
-    """ get_ref_heat_resource is a helper function which returns the property
-    with the given name from the given Heat resource object.
-    """
-    resource_name = heat_resource.properties.data[property_name].args
-    return heat_resource.stack[resource_name]
-
-
 class BaseHeatARMTranslator(object):
     """ BaseHeatARMTranslator is the base class for all heat to ARM translators
 
@@ -89,6 +81,5 @@ class BaseHeatARMTranslator(object):
         """
         self._context.add_parameters(self.get_parameters())
         self._context.add_variables(self.get_variables())
-        res = self.get_resource_data()
-        if res:
-            self._context.add_resource(res)
+        for resource in self.get_resource_data():
+            self._context.add_resource(resource)
