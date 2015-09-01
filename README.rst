@@ -21,24 +21,19 @@ installation:
 
 **Ubuntu 14.04**:
 ::
-  sudo apt-get install -y git python-pip python-dev python-cffi python-lxml libssl-dev python-oslo.config
+  sudo apt-get install -y git python-pip python-dev python-cffi
 
 **CentOS/RHEL 7.0**:
 ::
   sudo yum install -y epel-release
-  sudo yum install -y git gcc python-pip python-devel python-cffi python-lxml openssl-devel python-oslo-config
+  sudo yum install -y git gcc python-pip python-devel python-cffi
 
-Heat and heat2arm installation:
+Heat2arm installation:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Afterwards, we must install a couple of preliminary pypi packages:
 ::
   sudo pip install pbr routes
-
-Then, considering Heat's components have no pypi packages, we must clone the project and install them manually:
-::
-  git clone http://github.com/openstack/heat
-  sudo pip install ./heat
 
 Lastly, we must now clone and install the converter itself:
 ::
