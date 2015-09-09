@@ -52,10 +52,8 @@ class Resource(object):
             self.properties = data[self._properties_field_name]
         else:
             self.properties = {}
-            LOG.warn("Provided resource has no '%s' field: '%s'" %
-                     (self._properties_field_name, self.name))
-
-        # TODO(aznashwan): hook up resource validation here.
+            LOG.warn("Resource '%s' has no '%s' field.",
+                     self.name, self._properties_field_name)
 
     def type(self):
         """ type returns this Resource's type name. """

@@ -17,11 +17,11 @@
     This module contains definitions for CFN template functions.
 """
 
-from heat2arm.parser import common
+from heat2arm.parser.common import functions
 from heat2arm.parser.cfn.constants import CFN_TEMPLATE_DEFAULTS
 
 
-class CFNRefFunction(common.RefFunction):
+class CFNRefFunction(functions.RefFunction):
     """ CFNRefFunction implements the CFN template Ref function.
 
     It takes the form:
@@ -29,7 +29,7 @@ class CFNRefFunction(common.RefFunction):
         " 'Ref': '(ResourceName|ParameterName)' "
 
     NOTE: in CFN, 'Ref' is used both for accessing parameters and referencing
-    resources. For parameter accessing, it throws an exception if the parameter
+    resources. For parameter accessing, it logs an exception if the parameter
     does not have a 'Default' field set. In the case of resource referencing,
     Heat has a complex mechanism for determining the appropriate result per
     resource. We do not require such behavior and simply return the referenced
@@ -39,7 +39,7 @@ class CFNRefFunction(common.RefFunction):
     _param_default_field_name = "Default"
 
 
-class CFNJoinFunction(common.JoinFunction):
+class CFNJoinFunction(functions.JoinFunction):
     """ CFNJoinFunction implements the CFN template Join function.
 
     It takes the form:
@@ -49,7 +49,7 @@ class CFNJoinFunction(common.JoinFunction):
     name = "Fn::Join"
 
 
-class CFNBase64Function(common.Base64Function):
+class CFNBase64Function(functions.Base64Function):
     """ CFNBase64Function implements the CFN template Base64 function.
 
     It takes the form:
@@ -59,7 +59,7 @@ class CFNBase64Function(common.Base64Function):
     name = "Fn::Base64"
 
 
-class CFNGetAttrFunction(common.GetAttrFunction):
+class CFNGetAttrFunction(functions.GetAttrFunction):
     """ CFNGetAttrFunction implements the CFN template GetAtt function.
 
     It takes the form:
@@ -71,7 +71,7 @@ class CFNGetAttrFunction(common.GetAttrFunction):
     _exceptions = CFN_TEMPLATE_DEFAULTS
 
 
-class CFNFindInMapFunction(common.MapFindFunction):
+class CFNFindInMapFunction(functions.MapFindFunction):
     """ CFNFindInMapFunction implements the CFN template FindInMap function.
 
     It takes the form:

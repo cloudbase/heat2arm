@@ -74,6 +74,7 @@ class Template(object):
             raise Exception("Provided template data does not contain the"
                             "mandatory parameter and resource definitions"
                             "fields.")
+        self._validate_template_data()
 
         # extract our required fields:
         self.parameters = self._template_data[self._template_fields[
@@ -88,7 +89,8 @@ class Template(object):
 
         # NOTE: we pop out the outputs section of the template to ease parsing,
         # as it's useless to the translation process anyways:
-        self._template_data.pop(self._template_fields["outputs"])
+        if self._template_fields["outputs"] in self._template_data:
+            self._template_data.pop(self._template_fields["outputs"])
 
     def reduce_functions(self):
         """ reduce_functions reduces all the functions from within a template's
@@ -106,6 +108,19 @@ class Template(object):
             resources[name] = self._resource_class(name, data)
 
         return resources
+
+    def _validate_template_data(self):
+        """ _validate_template_data is a helper method which checks for the
+        bare minimal set of fields for the data to be considered a template.
+        """
+        mandatories = {
+            self._template_fields["parameters"],
+            self._template_fields["resources"]
+        }
+
+        for field in mandatories:
+            if field not in self._template_data:
+                raise Exception("Missing template field '%s'." % field)
 
     def _test_template_data(self, expected_fields):
         """ _test_template_data is a helper method which, provided a list of

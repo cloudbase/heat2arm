@@ -14,22 +14,12 @@
 #    under the License.
 
 """
-    This module contains general utility functions.
+    This module contains definitions for the base classes for a variety
+    of templating language function types.
 """
 
-import collections
-
-
-def is_homogeneous(seq, typ):
-    """ is_homogeneous checks whether the provided list's elements are
-    all an instance of the provided type.
-    """
-    if not (isinstance(seq, collections.Sequence) or
-            isinstance(seq, str)):
-        return False
-
-    for elem in seq:
-        if not isinstance(elem, typ):
-            return False
-
-    return True
+from heat2arm.parser.common.functions.base64_function import Base64Function
+from heat2arm.parser.common.functions.map_find import MapFindFunction
+from heat2arm.parser.common.functions.get_attr_function import GetAttrFunction
+from heat2arm.parser.common.functions.join_function import JoinFunction
+from heat2arm.parser.common.functions.ref_function import RefFunction

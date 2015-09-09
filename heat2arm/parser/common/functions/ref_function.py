@@ -19,7 +19,9 @@
 
 import logging
 
-from heat2arm.parser.function import Function
+from heat2arm.parser.common.exceptions import (FunctionApplicationException,
+                                               FunctionArgumentException)
+from heat2arm.parser.common.function import Function
 
 
 LOG = logging.getLogger("__heat2arm__")
@@ -33,7 +35,8 @@ class RefFunction(Function):
 
         " 'RefFunction': 'RefName' "
 
-    It simply returns the object of reference.
+    It simply returns the default value of the specified parameter or the
+    referenced resource.
     """
 
     # for the parameter accessing functions, define the default
@@ -43,9 +46,13 @@ class RefFunction(Function):
     def _check_args(self, args):
         """ _check_args validates the provided set of arguments. """
         if not isinstance(args, str):
-            raise Exception("Referencing function '%s' expects a "
-                            "single string parameter, but got: '%s'" %
-                            (self.name, args))
+            raise FunctionArgumentException(
+                "Referencing function '%s' expects a "
+                "single string parameter, but got: '%s'" % (
+                    self.name,
+                    args
+                )
+            )
 
     def apply(self, args):
         """ apply applies the function to the given set of data and returns
@@ -65,8 +72,8 @@ class RefFunction(Function):
             else:
                 # the value might not be necessary, so we just log a warning
                 # and return the provided args:
-                LOG.warn("Default field for parameter '%s' was not provided; "
-                         "ignoring in case it wasn't really needed." % args)
+                LOG.warning("Default field for parameter '%s' was not provided;"
+                            " ignoring in case it wasn't really needed.", args)
                 return args
 
         # else, it must be a reference to another resource, in which case
@@ -75,5 +82,10 @@ class RefFunction(Function):
             return args
 
         # else, rock bottom:
-        raise IndexError("Invalid referencing with '%s'. Reference to '%s'"
-                         "could not be resolved." % (self.name, args))
+        raise FunctionApplicationException(
+            "Invalid referencing with '%s'. Reference to '%s' "
+            "could not be resolved." % (
+                self.name,
+                args
+            )
+        )

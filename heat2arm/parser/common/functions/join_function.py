@@ -19,8 +19,9 @@
 
 from functools import reduce
 
-from heat2arm.parser.function import Function
-from heat2arm.parser.common.utils import is_homogeneous
+from heat2arm.parser.common import exceptions
+from heat2arm.parser.common.function import Function
+from heat2arm.parser.common.functions.utils import is_homogeneous
 
 
 class JoinFunction(Function):
@@ -37,16 +38,22 @@ class JoinFunction(Function):
 
     def _check_args(self, args):
         """ _check_args validates the provided set of arguments. """
+        if not len(args) == 2:
+            raise exceptions.FunctionArgumentException(
+                "'%s': expected exactly two arguments (string separator and"
+                "list of strings), got: '%s'."
+            )
         if not isinstance(args[0], str):
-            raise Exception(
+            raise exceptions.FunctionArgumentException(
                 "First argument of joining function  '%s' must be a string"
                 ", got: '%s'" % (self.name, type(args))
             )
 
-        if not is_homogeneous(args[1], str):
-            raise Exception("Second argument of joining function  '%s' must "
-                            "be a list of strings, got: '%s'" % (self.name,
-                                                                 args))
+        if not is_homogeneous(args[1], (str,)):
+            raise exceptions.FunctionArgumentException(
+                "Second argument of joining function  '%s' must "
+                "be a list of strings, got: '%s'" % (self.name, args)
+            )
 
     def apply(self, args):
         """ apply applies the function to the given set of arguments
@@ -55,4 +62,4 @@ class JoinFunction(Function):
         self._check_args(args)
 
         sep = args[0]
-        return reduce(lambda x, y: sep.join([x, y]), args[1])
+        return reduce(lambda x, y: sep.join([x, y]), args[1], "")

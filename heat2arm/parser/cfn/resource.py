@@ -17,7 +17,7 @@
     Contains the specialized definition of CFN resources.
 """
 
-from heat2arm.parser.resource import Resource
+from heat2arm.parser.common.resource import Resource
 
 
 class CFNResource(Resource):

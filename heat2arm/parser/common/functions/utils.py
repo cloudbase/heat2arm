@@ -14,14 +14,21 @@
 #    under the License.
 
 """
-    Contains the specialized definition of Heat resources.
+    This module contains general utility functions.
 """
 
-from heat2arm.parser.common.resource import Resource
+import collections
 
 
-class HeatResource(Resource):
-    """ HeatResource is the resource class for Heat resources.
+def is_homogeneous(seq, types):
+    """ is_homogeneous checks whether the provided list's elements are
+    all an instance of one of the required types.
     """
-    _type_field_name = "type"
-    _properties_field_name = "properties"
+    if not isinstance(seq, collections.Sequence) or isinstance(seq, str):
+        return False
+
+    for elem in seq:
+        if not type(elem) in types:
+            return False
+
+    return True

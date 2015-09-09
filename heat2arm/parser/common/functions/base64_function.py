@@ -17,7 +17,8 @@
     Contains the definition for the base class of base64 encoding functions.
 """
 
-from heat2arm.parser.function import Function
+from heat2arm.parser.common import exceptions
+from heat2arm.parser.common.function import Function
 
 
 class Base64Function(Function):
@@ -31,8 +32,11 @@ class Base64Function(Function):
     def _check_args(self, args):
         """ _check_args checks the validity of the provided arguments. """
         if not isinstance(args, str):
-            raise Exception("Base64 function expected string parameter, "
-                            "got: '%s'" % args)
+            raise exceptions.FunctionArgumentException(
+                "Base64 function expected"
+                "string parameter, got: '%s'"
+                % args
+            )
 
     def apply(self, args):
         """ apply applies the function to the given arguments and returns
@@ -41,5 +45,5 @@ class Base64Function(Function):
         NOTE: because we don't actually want the base64 conversion to occur
         here, we simply return the string as-is:
         """
-        self ._check_args(args)
+        self._check_args(args)
         return args

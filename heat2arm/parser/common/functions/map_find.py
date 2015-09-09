@@ -17,7 +17,10 @@
     Defines the base class for all map-referencing functions.
 """
 
-from heat2arm.parser.function import Function
+from heat2arm.parser.common.exceptions import (FunctionApplicationException,
+                                               FunctionArgumentException)
+from heat2arm.parser.common.function import Function
+from heat2arm.parser.common.functions.utils import is_homogeneous
 
 
 class MapFindFunction(Function):
@@ -31,14 +34,18 @@ class MapFindFunction(Function):
     def _check_args(self, args):
         """ _check_args validates the provided set of arguments. """
         # check if list:
-        if not isinstance(args, list):
-            raise Exception("Argument of mapping function '%s' must be a list;"
-                            " got: '%s'" % (self.name, args))
+        if not is_homogeneous(args, (str,)):
+            raise FunctionArgumentException(
+                "Argument of mapping function '%s' must be a list;"
+                "of strings; got: '%s'" % (self.name, args)
+            )
 
         # check if list of proper length:
         if not len(args) == 3:
-            raise Exception("%s: argument list must have the three elements;"
-                            " got: '%s'" % (self.name, args))
+            raise FunctionArgumentException(
+                "%s: argument list must have the three elements;"
+                " got: '%s'" % (self.name, args)
+            )
 
     def apply(self, args):
         """ apply applies the function on the given set of arguments and
@@ -49,24 +56,33 @@ class MapFindFunction(Function):
         # first, check for the name of the mapping:
         map_name = args[0]
         if map_name not in self._template.variables:
-            raise Exception("%s: could not find defined mapping '%s'" % (
-                self.name,
-                map_name
-            ))
+            raise FunctionApplicationException(
+                "%s: could not find defined mapping '%s'" % (
+                    self.name,
+                    map_name
+                )
+            )
         mapping = self._template.variables[map_name]
 
         # then, check for the key:
         key = args[1]
         if key not in mapping:
-            raise Exception("%s: could not find key '%s' in mapping '%s'" %
-                            (self.name, key, map_name))
+            raise FunctionApplicationException(
+                "%s: could not find key '%s' in mapping '%s'" %
+                (self.name, key, map_name)
+            )
         mapping = mapping[key]
 
         # and last, check for the value:
         value = args[2]
         if value not in mapping:
-            raise Exception("%s: could not find value '%s' in mapping '%s'" %
-                            (self.name, value, mapping))
+            raise FunctionApplicationException(
+                "%s: could not find value '%s' in mapping '%s'" % (
+                    self.name,
+                    value,
+                    mapping
+                )
+            )
 
         # if here; can return the value directly:
         return mapping[value]

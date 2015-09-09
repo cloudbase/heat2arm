@@ -18,10 +18,10 @@
     of a heat template.
 """
 
-from heat2arm.parser import common
+from heat2arm.parser.common import functions
 
 
-class HeatGetResourceFunction(common.RefFunction):
+class HeatGetResourceFunction(functions.RefFunction):
     """ HeatGetResourceFunction implements the functionality of the
     get_resource Heat template function.
 
@@ -34,10 +34,9 @@ class HeatGetResourceFunction(common.RefFunction):
     purposes, we only return the referenced resource's name.
     """
     name = "get_resource"
-    _param_default_field_name = "ludicrous"
 
 
-class HeatGetParameterFunction(common.RefFunction):
+class HeatGetParameterFunction(functions.RefFunction):
     """ HeatGetParameterFunction implements the functionality of the
     get_parameter Heat template function.
 
@@ -51,7 +50,7 @@ class HeatGetParameterFunction(common.RefFunction):
     _param_default_field_name = "default"
 
 
-class HeatJoinListFunction(common.JoinFunction):
+class HeatJoinListFunction(functions.JoinFunction):
     """ HeatJoinListFunction implements the functionality of the list_join Heat
     template function.
 
@@ -62,7 +61,7 @@ class HeatJoinListFunction(common.JoinFunction):
     name = "list_join"
 
 
-class HeatGetAttrFunction(common.GetAttrFunction):
+class HeatGetAttrFunction(functions.GetAttrFunction):
     """ HeatGetAttrFunction implements the functionality of the get_attr
     Heat template function.
 
@@ -71,4 +70,4 @@ class HeatGetAttrFunction(common.GetAttrFunction):
         " get_attr: ['resource_name', 'field_name', ...] "
     """
     name = "get_attr"
-    _properties_fields_name = "properties"
+    _properties_field_name = "properties"

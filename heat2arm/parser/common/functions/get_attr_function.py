@@ -21,7 +21,10 @@
 import collections
 import logging
 
-from heat2arm.parser.function import Function
+from heat2arm.parser.common.exceptions import (FunctionApplicationException,
+                                               FunctionArgumentException)
+from heat2arm.parser.common.function import Function
+from heat2arm.parser.common.functions.utils import is_homogeneous
 
 
 LOG = logging.getLogger("__heat2arm__")
@@ -49,12 +52,19 @@ class GetAttrFunction(Function):
         """ _check_args is a helper method for checking the validity
         of the arguments provided.
         """
-        if not isinstance(args, list) and not len(args) >= 2:
-            raise Exception("Argument of attribute getter function '%s' must "
-                            "be a list of indeces; got: '%s'" % (
-                                self.name,
-                                args
-                            ))
+        if not isinstance(args, list) or not len(args) >= 2:
+            raise FunctionArgumentException("Argument of attribute getter "
+                                            "function '%s' must be a list of "
+                                            "indeces; got: '%s'" % (
+                                                self.name,
+                                                args
+                                            ))
+
+        if not is_homogeneous(args, (str, int)):
+            raise FunctionArgumentException(
+                "'%s': argument must be a list of strings; got: '%s'" %
+                (self.name, args)
+            )
 
     def _get_item(self, cont, index):
         """ _get_item is a helper method which returns field with the given
@@ -76,15 +86,15 @@ class GetAttrFunction(Function):
             if index in self._exceptions:
                 # just log the event and return the arg directly:
                 LOG.warn("'%s': get exception applied for '%s'. Defaulting to"
-                         "'%s'." % (self.name, index, self._exceptions[index]))
+                         "'%s'.", self.name, index, self._exceptions[index])
                 return self._exceptions[index]
             else:
                 # rock bottom:
-                raise IndexError("'%s': index '%s' missing from '%s'" % (
-                    self.name,
-                    index,
-                    cont
-                ))
+                raise FunctionApplicationException("'%s': index '%s' missing"
+                                                   "from :'%s'" % (self.name,
+                                                                   index,
+                                                                   cont
+                                                                  ))
 
     def apply(self, args):
         """ apply applies the function to the given set of arguments and
@@ -95,14 +105,21 @@ class GetAttrFunction(Function):
         # check if the resource exists:
         if args[0] in self._template.resources:
             # if so, procedurally index the resource for the desired info:
-            cont = self._template.resources[args[0]][
-                self._properties_field_name
-            ]
-            for i in args[1:]:
-                cont = self._get_item(cont, i)
-            return cont
+            res = self._template.resources[args[0]]
+
+            if not self._properties_field_name in res:
+                raise FunctionApplicationException(
+                    "'%s': resource has no '%s' field: '%s'." %
+                    (self.name, self._properties_field_name, res)
+                )
+
+            indexes = [self._properties_field_name] + args[1:]
+
+            for i in indexes:
+                res = self._get_item(res, i)
+            return res
         else:
-            raise Exception("%s: resource '%s' does not exist." % (
-                self.name,
-                args[0]
-            ))
+            raise FunctionApplicationException("%s: resource '%s' does "
+                                               "not exist." % (self.name,
+                                                               args[0]
+                                                              ))

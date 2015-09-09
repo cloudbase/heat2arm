@@ -14,14 +14,19 @@
 #    under the License.
 
 """
-    Contains the specialized definition of Heat resources.
+    This module defines a number of exceptions used by the parser.
 """
 
-from heat2arm.parser.common.resource import Resource
 
-
-class HeatResource(Resource):
-    """ HeatResource is the resource class for Heat resources.
+class FunctionArgumentException(Exception):
+    """ FunctionArgumentException is raised when a templating language
+    functions'arguments are incorrect.
     """
-    _type_field_name = "type"
-    _properties_field_name = "properties"
+    pass
+
+
+class FunctionApplicationException(Exception):
+    """ FunctionApplicationException is raised when a templating language
+    functions'application encounters an exception.
+    """
+    pass
