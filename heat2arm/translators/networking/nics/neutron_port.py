@@ -40,7 +40,7 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         this NIC-like resource.
         """
         for heat_resource in self._context.heat_resources:
-            if heat_resource.type() == "OS::Neutron::FloatingIP":
+            if heat_resource.type == "OS::Neutron::FloatingIP":
                 port_resource = self._context.get_ref_heat_resource(
                     heat_resource, 'port_id')
                 if port_resource is self._heat_resource:

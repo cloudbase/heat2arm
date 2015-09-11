@@ -86,7 +86,7 @@ class GetAttrFunction(Function):
             if index in self._exceptions:
                 # just log the event and return the arg directly:
                 LOG.warn("'%s': get exception applied for '%s'. Defaulting to"
-                         "'%s'.", self.name, index, self._exceptions[index])
+                         " '%s'.", self.name, index, self._exceptions[index])
                 return self._exceptions[index]
             else:
                 # rock bottom:

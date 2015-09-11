@@ -24,4 +24,5 @@ class HeatResource(Resource):
     """ HeatResource is the resource class for Heat resources.
     """
     _type_field_name = "type"
+    _meta_field_name = ""
     _properties_field_name = "properties"

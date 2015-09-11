@@ -19,6 +19,7 @@
 
 import yaml
 
+from heat2arm.parser.common.exceptions import TemplateDataException
 from heat2arm.parser.cfn import FUNCTIONS as cfn_functions
 from heat2arm.parser.cfn import RESOURCE_CLASS as cfn_resource_class
 from heat2arm.parser.cfn import CFN_TEMPLATE_FIELDS as cfn_template_fields
@@ -52,9 +53,9 @@ class Template(object):
         # the list of templating language functions which can be applied:
         self._functions = []
 
-        # NOTE: considering JSON is a subset of YAML since the 1.2 version of
-        # YAML's specification; we directly use the in-build yaml module for
-        # parsing the input template.
+        # NOTE: considering JSON is a subset of YAML since the 1.2
+        # version of YAML's specification; we directly use the yaml
+        # module for parsing the input template.
         self._template_data = yaml.load(template)
 
         # check whether we're dealing with a CFN or a Heat template and define
@@ -70,10 +71,10 @@ class Template(object):
             self._init_functions(heat_functions)
             self._resource_class = heat_resource_class
         else:
-            # else, rock bottom:
-            raise Exception("Provided template data does not contain the"
-                            "mandatory parameter and resource definitions"
-                            "fields.")
+            raise TemplateDataException(
+                "Template has none of the expected fields: '%s'",
+                self._template_data
+            )
         self._validate_template_data()
 
         # extract our required fields:
@@ -88,7 +89,7 @@ class Template(object):
         )
 
         # NOTE: we pop out the outputs section of the template to ease parsing,
-        # as it's useless to the translation process anyways:
+        # as it's useless to the translation process anyhow:
         if self._template_fields["outputs"] in self._template_data:
             self._template_data.pop(self._template_fields["outputs"])
 
@@ -100,14 +101,12 @@ class Template(object):
 
     def parse_resources(self):
         """ parse_resources instantiates all the resource classes from the
-        resource data from within the template and returns their list.
+        resource data from within the template and returns their dict.
         """
-        resources = {}
-
-        for name, data in self.resources.items():
-            resources[name] = self._resource_class(name, data)
-
-        return resources
+        return {
+            name: self._resource_class(name, data) for name, data in
+            self.resources.items()
+        }
 
     def _validate_template_data(self):
         """ _validate_template_data is a helper method which checks for the
@@ -120,13 +119,28 @@ class Template(object):
 
         for field in mandatories:
             if field not in self._template_data:
-                raise Exception("Missing template field '%s'." % field)
+                raise TemplateDataException(
+                    "Missing template field '%s'." % field
+                )
+            if not isinstance(self._template_data[field], dict):
+                raise TemplateDataException(
+                    "Template field '%s' must be a dict, got: '%s'" % (
+                        field,
+                        self._template_data[field]
+                    )
+                )
 
     def _test_template_data(self, expected_fields):
         """ _test_template_data is a helper method which, provided a list of
         expected fields, returns a boolean to signal whether or not the given
         data contains the required fields for it to count as a template.
         """
+        if not isinstance(self._template_data, dict):
+            raise TemplateDataException(
+                "Top level of template is '%s', not 'dict': '%s'.",
+                type(self._template_data),
+                self._template_data
+            )
         template_keys = self._template_data.keys()
 
         return set(template_keys).issubset(expected_fields)
@@ -146,11 +160,11 @@ class Template(object):
             # it means it's not a function and we return as-is:
             return data
 
-        for k, v in data.items():
+        for key, val in data.items():
             # check if it is a function:
-            if k in self._functions:
-                # if so, check the validity of the arguments and apply it:
-                return self._functions[k].apply(v)
+            if key in self._functions:
+                # if so, return the result of applying the function:
+                return self._functions[key].apply(val)
 
         # else, it means it's not a function and we return as-is:
         return data
@@ -170,11 +184,11 @@ class Template(object):
 
         if is_list:
             # apply to each element of the list:
-            return map(self._reduce_functions, obj)
+            return [self._reduce_functions(item) for item in obj]
 
         if is_dict:
             # reduce each element of the dict before reducing the whole:
-            for k, v in obj.items():
-                obj[k] = self._reduce_functions(v)
+            for key, val in obj.items():
+                obj[key] = self._reduce_functions(val)
 
             return self._apply_function(obj)

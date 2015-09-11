@@ -18,6 +18,13 @@
 """
 
 
+class TemplateDataException(Exception):
+    """ TemplateDataException is raised when a template does not contain the
+    minimum required fields for it to be convertible.
+    """
+    pass
+
+
 class FunctionArgumentException(Exception):
     """ FunctionArgumentException is raised when a templating language
     functions'arguments are incorrect.
@@ -28,5 +35,19 @@ class FunctionArgumentException(Exception):
 class FunctionApplicationException(Exception):
     """ FunctionApplicationException is raised when a templating language
     functions'application encounters an exception.
+    """
+    pass
+
+
+class ResourceNameMissingException(Exception):
+    """ ResourceNameMissingException is raised when a Resource defined in a
+    template has no name.
+    """
+    pass
+
+
+class ResourceTypeMissingException(Exception):
+    """ ResourcePropertiesMissingException is raised when a resource defined in
+    a template does not have the mandatory properties field in it.
     """
     pass

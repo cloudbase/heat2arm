@@ -69,14 +69,14 @@ def get_resource_translator(heat_resource, context):
     res_trans = None
     for trans in RESOURCE_TRANSLATORS:
         # TODO
-        if trans.heat_resource_type == heat_resource.type():
+        if trans.heat_resource_type == heat_resource.type:
             res_trans = trans
 
     if res_trans:
         return res_trans(heat_resource, context)
     else:
         LOG.warn('Could not find a corresponding ARM resource for Heat '
-                 'resource "%s"', heat_resource.type())
+                 'resource "%s"', heat_resource.type)
 
 
 def get_arm_schema():

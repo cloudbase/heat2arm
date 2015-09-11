@@ -25,12 +25,15 @@ import heat2arm.constants as constants
 class Context(object):
     """ Context represents the specific context of the ongoing translation.
     It holds and provides access to all already declared parameters, variables
-    and resources, as well as some important aspects to be kept in mind.
+    and resources, as well as some important aspects to be kept in mind
+    regarding the current translation (ex: should a default storage account be
+    created to support the translated deployment).
     """
 
     def __init__(self, heat_resource_stack,
                  location=constants.DEFAULT_LOCATION):
-        """ A Context object is created from the full heat resource stack and
+        """ A Context object is created from the full Heat resource stack
+        (simply a dict of resource names to resource data mappings) and
         an optional locaton parameter.
         """
         self.heat_resource_stack = heat_resource_stack

@@ -18,12 +18,15 @@
 """
 
 
+# CFN_TEMPLATE_FIELDS represents the mapping between the field types and their
+# respective names as characteristic of CFN templates.
 CFN_TEMPLATE_FIELDS = {
     "description": "Description",
     "variables": "Mappings",
     "parameters": "Parameters",
     "resources": "Resources",
     "properties": "Properties",
+    "meta": "Metadata",
     "type": "Type",
     "aws_temp_format_version": "AWSTemplateFormatVersion",
     "heat_temp_format_version": "HeatTemplateFormatVersion",

@@ -14,20 +14,6 @@
 #    under the License.
 
 """
-    Contains definitions of general constants found in all Heat templates.
+    This module contains unit tests for the modules and submodules
+    of the template parser.
 """
-
-# HEAT_TEMPLATE_FIELDS represents the mapping between field types and field
-# names which are characteristic of Heat templates.
-HEAT_TEMPLATE_FIELDS = {
-    "description": "description",
-    "variables": "",  # TODO
-    "parameters": "parameters",
-    "type": "type",
-    "meta": "",
-    "properties": "properties",
-    "resources": "resources",
-    "aws_temp_format_version": "",
-    "heat_temp_format_version": "heat_template_version",
-    "outputs": "outputs"
-}

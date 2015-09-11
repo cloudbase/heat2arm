@@ -20,16 +20,28 @@
 import json
 import logging
 
+from heat2arm.parser.common import exceptions
+
 LOG = logging.getLogger("__heat2arm__")
 
 
 class Resource(object):
     """ Resource defines the basic properties of any resource.
+
+    It makes available the data organised thorugh the following fields:
+        - name - the name of the resource
+        - properties - the dict of properties for the Resource
+        - meta - the dict of metadata for the resource (if applicable)
+        - type - the type of the resource
     """
 
     # _type_field_name contains the string constant representing the name
     # of the type field of a resource.
     _type_field_name = ""
+
+    # _meta_field_name contains the string constant representing the the
+    # name of the meta field of a resource (if applicable).
+    _meta_field_name = ""
 
     # _properties_field_name contains the string constant representing
     # the name of the properties field of a resource.
@@ -39,13 +51,27 @@ class Resource(object):
         """ A Resource is created provided the name of the resource and all the
         containing data.
         """
+        if not name:
+            raise exceptions.ResourceNameMissingException(
+                "No name given to resource."
+            )
         self.name = name
 
         # check for the type field, which is mandatory:
         if self._type_field_name not in data:
-            raise Exception("Provided resource has no '%s' field: '%s'" %
-                            (self._type_field_name, self))
-        self._type = data[self._type_field_name]
+            raise exceptions.ResourceTypeMissingException(
+                "Resource '%s' has no '%s' field." % (
+                    self.name,
+                    self._type_field_name
+                )
+            )
+        self.type = data[self._type_field_name]
+
+        # check for the meta field (if one is even available):
+        if self._meta_field_name and self._meta_field_name in data:
+            self.meta = data[self._meta_field_name]
+        else:
+            self.meta = {}
 
         # next, check for a properties field:
         if self._properties_field_name in data:
@@ -55,18 +81,15 @@ class Resource(object):
             LOG.warn("Resource '%s' has no '%s' field.",
                      self.name, self._properties_field_name)
 
-    def type(self):
-        """ type returns this Resource's type name. """
-        return self._type
-
     def __str__(self):
-        """ __str__ simply returns the properties dict of the resource. """
-        data = self.properties.copy()
-        data.update({self._type_field_name: self._type})
-        return json.dumps(data, indent=4)
+        """ __str__ simply returns a pretty JSON interpretation
+        of the data which characterises the resource.
+        """
+        return json.dumps(self.properties, indent=4)
 
     def __repr__(self):
-        """ __repr__ simply returns a dict with the resource's name and
-        properties.
+        """ __repr__ simply returns a JSON interpretation of the data
+        which characterises the resource in a dict under the
+        resource's name.
         """
-        return json.dumps({self.name: self.properties}, indent=4)
+        return json.dumps({self.name: self.properties})

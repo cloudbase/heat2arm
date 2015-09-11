@@ -23,4 +23,5 @@ from heat2arm.parser.common.resource import Resource
 class CFNResource(Resource):
     """ CFNResource is the resource class for CFN resources. """
     _type_field_name = "Type"
+    _meta_field_name = "Metadata"
     _properties_field_name = "Properties"

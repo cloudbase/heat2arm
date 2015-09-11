@@ -62,4 +62,4 @@ class JoinFunction(Function):
         self._check_args(args)
 
         sep = args[0]
-        return reduce(lambda x, y: sep.join([x, y]), args[1], "")
+        return reduce(lambda x, y: sep.join([x, y]), args[1])

@@ -14,20 +14,12 @@
 #    under the License.
 
 """
-    Contains definitions of general constants found in all Heat templates.
+    This module contains tests for the main Template class.
 """
 
-# HEAT_TEMPLATE_FIELDS represents the mapping between field types and field
-# names which are characteristic of Heat templates.
-HEAT_TEMPLATE_FIELDS = {
-    "description": "description",
-    "variables": "",  # TODO
-    "parameters": "parameters",
-    "type": "type",
-    "meta": "",
-    "properties": "properties",
-    "resources": "resources",
-    "aws_temp_format_version": "",
-    "heat_temp_format_version": "heat_template_version",
-    "outputs": "outputs"
-}
+
+import unittest
+
+from heat2arm.parser.template import Template
+from heat2arm.parser.testing import cfn_testing
+from heat2arm.parser.testing import hot_testing
