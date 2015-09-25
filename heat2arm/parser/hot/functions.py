@@ -34,6 +34,7 @@ class HeatGetResourceFunction(functions.RefFunction):
     purposes, we only return the referenced resource's name.
     """
     name = "get_resource"
+    _exceptions = {}
 
 
 class HeatGetParameterFunction(functions.RefFunction):
@@ -48,6 +49,7 @@ class HeatGetParameterFunction(functions.RefFunction):
     """
     name = "get_param"
     _param_default_field_name = "default"
+    _exceptions = {}
 
 
 class HeatJoinListFunction(functions.JoinFunction):

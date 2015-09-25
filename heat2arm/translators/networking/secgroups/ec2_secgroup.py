@@ -41,7 +41,7 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                     "SecurityGroupIngress"]:
                 # build the rule:
                 rule = {
-                    "name": "%s_rule_%d" % (self._name, i),
+                    "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
                         "protocol": in_rule["IpProtocol"],
                         "sourcePortRange": in_rule["FromPort"],
@@ -64,7 +64,7 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                     "SecurityGroupEgress"]:
                 # build the rule:
                 rule = {
-                    "name": "%s_rule_%d" % (self._name, i),
+                    "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
                         "protocol": out_rule["IpProtocol"],
                         "sourcePortRange": out_rule["FromPort"],

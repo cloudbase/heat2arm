@@ -14,7 +14,7 @@
 #    under the License.
 
 """
-    Contains all the basic layout of the translation engine.
+    This module contains the main logic of the translation engine.
 """
 
 import collections
@@ -23,9 +23,10 @@ import jsonschema
 import logging
 import requests
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.context import Context
 from heat2arm.parser.parsing import parse_template
+from heat2arm.translators import autoscaling
 from heat2arm.translators import instances
 from heat2arm.translators import networking
 from heat2arm.translators import storage
@@ -33,6 +34,8 @@ from heat2arm.translators import storage
 
 LOG = logging.getLogger("__heat2arm__")
 
+# RESOURCE_TRANSLATORS is a list of all the resource translator
+# classes to be used within the translation process.
 RESOURCE_TRANSLATORS = [
     instances.NovaServerARMTranslator,
     instances.EC2InstanceARMTranslator,
@@ -50,6 +53,9 @@ RESOURCE_TRANSLATORS = [
     storage.CinderVolumeAttachmentARMTranslator,
     storage.EBSVolumeARMTranslator,
     storage.EBSVolumeAttachmentARMTranslator,
+    autoscaling.AWSAutoScalingGroupARMTranslator,
+    autoscaling.AWSScalingPolicyARMTranslator,
+    autoscaling.AWSLaunchConfigurationARMTranslator
 ]
 
 
@@ -81,7 +87,7 @@ def get_resource_translator(heat_resource, context):
 
 def get_arm_schema():
     """ get_arm_schema fetches the ARM schema from its default URL. """
-    response = requests.get(constants.ARM_SCHEMA_URL)
+    response = requests.get(CONF.arm_schema_url)
     response.raise_for_status()
     return json.loads(response.text)
 
@@ -100,14 +106,10 @@ def get_arm_template(resources, context):
         resource.update_context()
 
     template_data = context.get_template_data()
-    template_data.update({
-        "$schema": constants.ARM_SCHEMA_URL,
-        "contentVersion": constants.ARM_TEMPLATE_VERSION
-    })
 
     return collections.OrderedDict([
-        ("contentVersion", constants.ARM_TEMPLATE_VERSION),
-        ("$schema", constants.ARM_SCHEMA_URL),
+        ("contentVersion", CONF.arm_template_version),
+        ("$schema", CONF.arm_schema_url),
         ("parameters", template_data["parameters"]),
         ("variables", template_data["variables"]),
         ("resources", template_data["resources"])
@@ -120,7 +122,7 @@ def convert_template(heat_template_data):
     """
     heat_stack = parse_template(heat_template_data)
 
-    context = Context(heat_stack, constants.DEFAULT_LOCATION)
+    context = Context(heat_stack)
 
     arm_resources = []
     for heat_resource in heat_stack.values():
@@ -129,7 +131,7 @@ def convert_template(heat_template_data):
             arm_resources.append(res_trans)
 
     arm_template_data = get_arm_template(arm_resources, context)
-    if constants.VALIDATE_TEMPLATE_SCHEMA:
+    if CONF.validate_arm_template_data:
         validate_template_data(arm_template_data)
 
     return arm_template_data

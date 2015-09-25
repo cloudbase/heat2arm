@@ -1,4 +1,5 @@
+jsonschema
+oslo.config>=2.2.0
 pbr
 PyYAML
-jsonschema
 requests

@@ -21,7 +21,7 @@
 https://azure.microsoft.com/en-gb/documentation/articles/resource-groups-networking/
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -42,16 +42,17 @@ class NeutronNetARMTranslator(BaseHeatARMTranslator):
 
     def get_variables(self):
         return {
-            "virtualNetworkName_%s" % self._name: self._name,
-            "virtualNetworkSubnetName_%s" % self._name:
-            "%s_subnet1" % self._name,
-            "virtualNetworkName_ref_%s" % self._name:
+            "virtualNetworkName_%s" % self._heat_resource_name:
+                self._heat_resource_name,
+            "virtualNetworkSubnetName_%s" % self._heat_resource_name:
+            "%s_subnet1" % self._heat_resource_name,
+            "virtualNetworkName_ref_%s" % self._heat_resource_name:
             "[resourceId('Microsoft.Network/virtualNetworks', "
-            "variables('virtualNetworkName_%s'))]" % self._name,
-            "virtualNetworkSubnetName_ref_%s" % self._name:
+            "variables('virtualNetworkName_%s'))]" % self._heat_resource_name,
+            "virtualNetworkSubnetName_ref_%s" % self._heat_resource_name:
             "[concat(variables('virtualNetworkName_ref_%(net_name)s'),"
             "'/subnets/',variables('virtualNetworkSubnetName_%(net_name)s'))]"
-            % {"net_name": self._name}
+            % {"net_name": self._heat_resource_name}
         }
 
 
@@ -72,7 +73,7 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
         """
         cidr = self._heat_resource.properties['cidr']
         return {
-            "subNetAddressPrefix_%s" % self._name: cidr
+            "subNetAddressPrefix_%s" % self._heat_resource_name: cidr
         }
 
     def get_resource_data(self):
@@ -85,7 +86,7 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
         net_name = heat_net_resource.name
 
         return [{
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "type": "Microsoft.Network/virtualNetworks",
             "name":
             "[variables('virtualNetworkName_%s')]" % net_name,
@@ -94,7 +95,9 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
                 "addressSpace": {
                     "addressPrefixes": [
                         # TODO: support multiple subnets
-                        "[variables('subNetAddressPrefix_%s')]" % self._name
+                        "[variables('subNetAddressPrefix_%s')]" % (
+                            self._heat_resource_name
+                        )
                     ]
                 },
                 "subnets": [{
@@ -106,7 +109,9 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
                     "[variables('virtualNetworkSubnetName_%s')]" % net_name,
                     "properties": {
                         "addressPrefix":
-                        "[variables('subNetAddressPrefix_%s')]" % self._name
+                        "[variables('subNetAddressPrefix_%s')]" % (
+                            self._heat_resource_name
+                        )
                     }
                 }]
             }

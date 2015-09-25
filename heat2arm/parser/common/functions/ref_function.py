@@ -43,6 +43,11 @@ class RefFunction(Function):
     # field's name of the parameter's definition.
     _param_default_field_name = ""
 
+    # _exceptions is a dict of attributes whose getting is not necessary and
+    # the associated default value to be used.
+    # ex: CFN's GetAtt for an AvailabilityZone.
+    _exceptions = {}
+
     def _check_args(self, args):
         """ _check_args validates the provided set of arguments. """
         if not isinstance(args, str):
@@ -72,14 +77,27 @@ class RefFunction(Function):
             else:
                 # the value might not be necessary, so we just log a warning
                 # and return the provided args:
-                LOG.warning("Default field for parameter '%s' was not provided;"
-                            " ignoring in case it wasn't really needed.", args)
+                LOG.warning(
+                    "Default field for parameter '%s' was not provided; "
+                    "ignoring in case it wasn't really needed.",
+                    args
+                )
                 return args
 
         # else, it must be a reference to another resource, in which case
         # we trivially return the resource's name if present:
         if args in self._template.resources:
             return args
+
+        # finally; make sure that it is not an exceptional case:
+        if args in self._exceptions:
+            # if so; log a warning and proceed to use the exception's default:
+            LOG.warning(
+                "'%s': referencing exception applied for '%s'. "
+                "Defaulting to '%s'.", self.name, args,
+                self._exceptions[args]
+            )
+            return self._exceptions[args]
 
         # else, rock bottom:
         raise FunctionApplicationException(

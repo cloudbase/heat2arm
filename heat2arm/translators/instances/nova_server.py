@@ -42,11 +42,11 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
         )
 
         base_vars.update({
-            "vmSize_%s" % self._name: utils.get_azure_flavor(
+            "vmSize_%s" % self._heat_resource_name: utils.get_azure_flavor(
                 self._heat_resource.properties['flavor']),
-            "imgPublisher_%s" % self._name: publisher,
-            "imgOffer_%s" % self._name: offer,
-            "imgSku_%s" % self._name: sku,
+            "imgPublisher_%s" % self._heat_resource_name: publisher,
+            "imgOffer_%s" % self._heat_resource_name: offer,
+            "imgSku_%s" % self._heat_resource_name: sku,
         })
 
         return base_vars

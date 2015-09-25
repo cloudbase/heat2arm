@@ -34,5 +34,6 @@ CFN_TEMPLATE_FIELDS = {
 }
 
 CFN_TEMPLATE_DEFAULTS = {
+    # NOTE: this may bite back real hard when translating AutoScalingGroups:
     "AvailabilityZone": "DefaultAZ",
 }

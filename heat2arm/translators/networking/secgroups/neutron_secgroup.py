@@ -53,7 +53,7 @@ class NeutronSecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
 
                 # build the new rule:
                 new_rule = {
-                    "name": "%s__rule_%d" % (self._name, i),
+                    "name": "%s__rule_%d" % (self._heat_resource_name, i),
                     "properties": {
                         "protocol": rule["protocol"],
                         # NOTE:source and destination port ranges here coincide

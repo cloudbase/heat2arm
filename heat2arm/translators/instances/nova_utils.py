@@ -18,7 +18,7 @@
     which aid in instance translations.
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 
 
 def get_azure_flavor(flavor):
@@ -26,23 +26,24 @@ def get_azure_flavor(flavor):
     appropriate Azure VM size corresponding to the given image flavor
     or a the pre-set sensible default.
     """
-    if flavor not in constants.NOVA_TO_ARM_SIZE_MAPPINGS:
+    if flavor not in CONF.nova_flavor_to_size_map:
         raise Exception("Could not find mapping for the EC2 image size "
-                        "'%s', please edit NOVA_TO_ARM_SIZE_MAPPINGS in the "
-                        "configuration.")
+                        "'%s', please edit 'nova_flavor_to_size_map' in the "
+                        "configuration." % flavor)
 
-    return constants.NOVA_TO_ARM_SIZE_MAPPINGS[flavor]
+    return CONF.nova_flavor_to_size_map
 
 
 def get_azure_image_info(nova_image):
     """ get_azure_image_info is a helper function which returns
     the info of the image.
     """
-    azure_image_info_str = constants.NOVA_TO_ARM_IMAGE_MAPPINGS[nova_image]
+    azure_image_info_str = CONF.nova_vm_image_map.get(nova_image, None)
+
     if not azure_image_info_str:
         raise Exception(
             'Nova image "%s" cannot be mapped to an Azure equivalent. Please '
-            'update the "NOVA_TO_ARM_IMAGE_MAPPINGS" configuration option' %
+            'update the "CONF.nova_vm_image_map" configuration option' %
             nova_image)
 
     azure_image_info = tuple(azure_image_info_str.split(";"))

@@ -17,7 +17,7 @@
     Defines the base implementation for ARM NIC resource translators.
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -33,7 +33,7 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         to the translation.
         """
         return {
-            "nicName_%s" % self._name: self._name,
+            "nicName_%s" % self._heat_resource_name: self._heat_resource_name,
         }
 
     def _get_floating_ip_resource_name(self):
@@ -109,14 +109,14 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
             }
 
         return [{
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicName_%s')]" % self._name,
+            "name": "[variables('nicName_%s')]" % self._heat_resource_name,
             "location": "[variables('location')]",
             "dependsOn": self.get_dependencies(),
             "properties": {
                 "ipConfigurations": [{
-                    "name": "ipconfig%s" % self._name,
+                    "name": "ipconfig%s" % self._heat_resource_name,
                     "properties": nic_properties_data,
                 }]
             }

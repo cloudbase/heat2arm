@@ -37,6 +37,11 @@ class CFNRefFunction(functions.RefFunction):
     """
     name = "Ref"
     _param_default_field_name = "Default"
+    _exceptions = {
+        "AWS::StackId": "heat2arm_stack_id",
+        "AWS::StackName": "heat2arm_stack_name",
+        "AWS::Region": "heat2arm_region"
+    }
 
 
 class CFNJoinFunction(functions.JoinFunction):

@@ -90,11 +90,11 @@ class GetAttrFunction(Function):
                 return self._exceptions[index]
             else:
                 # rock bottom:
-                raise FunctionApplicationException("'%s': index '%s' missing"
-                                                   "from :'%s'" % (self.name,
-                                                                   index,
-                                                                   cont
-                                                                  ))
+                raise FunctionApplicationException(
+                    "'%s': index '%s' missing from :'%s'" % (
+                        self.name, index, cont
+                    )
+                )
 
     def apply(self, args):
         """ apply applies the function to the given set of arguments and
@@ -107,7 +107,7 @@ class GetAttrFunction(Function):
             # if so, procedurally index the resource for the desired info:
             res = self._template.resources[args[0]]
 
-            if not self._properties_field_name in res:
+            if self._properties_field_name not in res:
                 raise FunctionApplicationException(
                     "'%s': resource has no '%s' field: '%s'." %
                     (self.name, self._properties_field_name, res)
@@ -119,7 +119,8 @@ class GetAttrFunction(Function):
                 res = self._get_item(res, i)
             return res
         else:
-            raise FunctionApplicationException("%s: resource '%s' does "
-                                               "not exist." % (self.name,
-                                                               args[0]
-                                                              ))
+            raise FunctionApplicationException(
+                "%s: resource '%s' does not exist." % (
+                    self.name, args[0]
+                )
+            )

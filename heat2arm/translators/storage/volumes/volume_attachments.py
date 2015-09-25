@@ -18,6 +18,9 @@
 """
 
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators.storage.volumes.exceptions import (
+    VolumeTargetInstanceNotFoundException
+)
 
 
 class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
@@ -47,10 +50,17 @@ class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
         """
         volume_name = self._get_volume_name()
 
-        res = self._context.get_resource({
+        res = self._context.get_arm_resource({
             "type": "Microsoft.Compute/virtualMachines",
             "name":  "[variables('vmName_%s')]" % self._get_instance_name()
         })
+        if not res:
+            raise VolumeTargetInstanceNotFoundException(
+                "'%s': unable to find VM '%s' to attach to." % (
+                    self,
+                    self._get_instance_name()
+                )
+            )
 
         if "dataDisks" not in res["properties"]["storageProfile"]:
             res["properties"]["storageProfile"]["dataDisks"] = []

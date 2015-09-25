@@ -14,21 +14,16 @@
 #    under the License.
 
 """
-    This module contains general utility functions.
+    This module contains definitions of Exception classes which may be raised
+    during the volume translation process.
 """
 
-import collections
+from heat2arm.translators import exceptions
 
 
-def is_homogeneous(seq, types):
-    """ is_homogeneous checks whether the provided list's elements are
-    all an instance of one of the required types.
+class VolumeTargetInstanceNotFoundException(
+        exceptions.ARMResourceNotFoundException):
+    """ VolumeTargetInstanceNotFoundException is raised whenever the instance a
+    volume should be attached to is not found.
     """
-    if (not isinstance(seq, collections.Sequence)) or (isinstance(seq, str)):
-        return False
-
-    for elem in seq:
-        if type(elem) not in types:
-            return False
-
-    return True
+    pass

@@ -17,29 +17,8 @@
     Definitions of various Azure-related constants.
 """
 
-ARM_API_2015_05_01_PREVIEW = "2015-05-01-preview"
-ARM_SCHEMA_URL_2015_01_01 = ("https://schema.management.azure.com/schemas/"
-                             "2015-01-01/deploymentTemplate.json#")
+ARM_API_2014_04_01 = "2014-04-01"
 
-# the version of the API to be used in all definitions:
-ARM_API_VERSION = ARM_API_2015_05_01_PREVIEW
-
-# ARM_SCHEMA_URL is the default URL for fetching the ARM template JSON schema:
-ARM_SCHEMA_URL = ARM_SCHEMA_URL_2015_01_01
-
-# ARM_TEMPLATE_VERSION is the version the resulting template will be on:
-ARM_TEMPLATE_VERSION = "1.0.0.0"
-
-# DEFAULT_STORAGE_ACCOUNT_TYPE is the default type for the storage account to
-# be created for the deployment if required.
-DEFAULT_STORAGE_ACCOUNT_TYPE = "Standard_LRS"
-
-# DEFAULT_STORAGE_CONTAINER_NAME is the default name for the
-# storage container to be used.
-DEFAULT_STORAGE_CONTAINER_NAME = "vhds"
-
-# DEFAULT_LOCATION is the default location to be used for the deployment.
-DEFAULT_LOCATION = "West US"
 
 # EC2_TO_ARM_SIZE_MAPPINGS is the set of mappings between EC2 VM sizes
 # and Azure instance sizes.
@@ -75,7 +54,7 @@ NOVA_TO_ARM_IMAGE_MAPPINGS = {
 }
 
 # VM_DEFAULT_SIZE is the default size of an instance on Azure.
-VM_DEFAULT_SIZE = "Baseic_A1"
+VM_DEFAULT_SIZE = "Basic_A1"
 
 # VALIDATE_TEMPLATE_SCHEMA denotes whether the resulting template
 # should be validated agains the latest ARM schema.

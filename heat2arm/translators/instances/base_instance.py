@@ -20,7 +20,7 @@
 
 import json
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -62,7 +62,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         variables all instance translations require.
         """
         return {
-            self._make_var_name("vmName"): self._name,
+            self._make_var_name("vmName"): self._heat_resource_name,
         }
 
     def _get_ref_port_resource_names(self):
@@ -104,7 +104,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         the default OS profile information.
         """
         return {
-            "computername": "[variables('vmName_%s')]" % self._name,
+            "computername": "[variables('vmName_%s')]" % (
+                self._heat_resource_name
+            ),
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]",
         }
@@ -116,13 +118,19 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         # list the properties all instances must have:
         vm_properties = {
             "hardwareProfile": {
-                "vmSize": "[variables('vmSize_%s')]" % self._name
+                "vmSize": "[variables('vmSize_%s')]" % self._heat_resource_name
             },
             "storageProfile": {
                 "imageReference": {
-                    "publisher": "[variables('imgPublisher_%s')]" % self._name,
-                    "offer": "[variables('imgOffer_%s')]" % self._name,
-                    "sku": "[variables('imgSku_%s')]" % self._name,
+                    "publisher": "[variables('imgPublisher_%s')]" % (
+                        self._heat_resource_name
+                    ),
+                    "offer": "[variables('imgOffer_%s')]" % (
+                        self._heat_resource_name
+                    ),
+                    "sku": "[variables('imgSku_%s')]" % (
+                        self._heat_resource_name
+                    ),
                     "version": "latest"
                 },
                 "osDisk": {
@@ -133,7 +141,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
                                "'.blob.core.windows.net/',variables("
                                "'vmStorageAccountContainerName'),'/',"
                                "variables('vmName_%s'),'_root.vhd')]" %
-                               self._name
+                               self._heat_resource_name
                     },
                     "caching": "ReadWrite",
                     "createOption": "FromImage"
@@ -183,7 +191,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         resulting ARM template for this resource.
         """
         return [{
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "location": "[variables('location')]",
@@ -202,10 +210,11 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             return
 
         self._context.add_variables({
-            "nicName_VM_%s" % self._name: "nic_VM_%s" % self._name,
+            "nicName_VM_%s" % self._heat_resource_name:
+                "nic_VM_%s" % self._heat_resource_name,
         })
 
-        res = self._context.get_resource({
+        res = self._context.get_arm_resource({
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
             "type": self.arm_resource_type
         })
@@ -215,19 +224,19 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             "[concat('Microsoft.Network/virtualNetworks/', "
             "parameters('newVirtualNetworkName'))]",
             "[concat('Microsoft.Network/networkInterfaces/', "
-            "variables('nicName_VM_%s'))]" % self._name
+            "variables('nicName_VM_%s'))]" % self._heat_resource_name
         ])
 
         res["properties"]["networkProfile"].update({
             "networkInterfaces": [{
                 "id": "[resourceId('Microsoft.Network/networkInterfaces', "
-                      "variables('nicName_VM_%s'))]" % self._name
+                      "variables('nicName_VM_%s'))]" % self._heat_resource_name
             }]
         })
 
         self._context.add_resource({
-            "name": "[variables('nicName_VM_%s')]" % self._name,
-            "apiVersion": constants.ARM_API_VERSION,
+            "name": "[variables('nicName_VM_%s')]" % self._heat_resource_name,
+            "apiVersion": CONF.arm_api_version,
             "location": "[variables('location')]",
             "type": "Microsoft.Network/networkInterfaces",
             "dependsOn": [
@@ -236,7 +245,7 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
             ],
             "properties": {
                 "ipConfigurations": [{
-                    "name": "ipConfig_nic_VM_%s" % self._name,
+                    "name": "ipConfig_nic_VM_%s" % self._heat_resource_name,
                     "properties": {
                         "subnet": {
                             "id": "[variables('defaultSubnetRef')]"

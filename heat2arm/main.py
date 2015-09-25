@@ -23,7 +23,8 @@ import logging
 import sys
 import warnings
 
-from heat2arm import constants
+from heat2arm.config import CONF
+
 from heat2arm import translation_engine as engine
 
 
@@ -40,9 +41,8 @@ def _parse_args():
                         help="Optional Azure ARM template output path",
                         type=argparse.FileType('w'),
                         default=sys.stdout)
-    parser.add_argument("--api-version", dest="api_version",
-                        help="Optional Azure ARM API version string of "
-                        "the form YYYY-MM-DD[-preview].",
+    parser.add_argument("--config-file",
+                        help="Path to an optional configuration file",
                         type=str)
     return parser.parse_args()
 
@@ -54,7 +54,6 @@ def _setup_logging():
     streamformat = "%(levelname)s (%(module)s:%(lineno)d) %(message)s"
     logging.basicConfig(level=logging.WARNING,
                         format=streamformat)
-    # disable Heat warnings:
     warnings.simplefilter("ignore")
 
 
@@ -64,8 +63,8 @@ def main():
 
     args = _parse_args()
 
-    if args.api_version:
-        constants.ARM_API_VERSION = args.api_version
+    if args.config_file:
+        CONF(["--config-file", args.config_file])
 
     heat_template_data = args.heat_template.read()
     args.heat_template.close()

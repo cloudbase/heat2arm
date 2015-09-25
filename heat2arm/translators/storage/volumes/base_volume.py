@@ -52,9 +52,9 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
         which will be storing the volume's URI on Azure.
         """
         return {
-            "diskUri_%s" % self._name:
+            "diskUri_%s" % self._heat_resource_name:
                 "[concat('http://',parameters('newStorageAccountName'),"
                 "'.blob.core.windows.net/',"
                 "variables('vmStorageAccountContainerName'),"
-                "'/%s.vhd')]" % self._name,
+                "'/%s.vhd')]" % self._heat_resource_name,
         }
