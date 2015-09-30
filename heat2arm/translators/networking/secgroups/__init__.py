@@ -20,6 +20,10 @@
 from heat2arm.translators.networking.secgroups.ec2_secgroup import (
     EC2SecurityGroupARMTranslator,
 )
+from heat2arm.translators.networking.secgroups.ec2_rules import (
+    EC2SecurityGroupRuleEgressARMTranslator,
+    EC2SecurityGroupRuleIngressARMTranslator
+)
 from heat2arm.translators.networking.secgroups.neutron_secgroup import (
     NeutronSecurityGroupARMTranslator,
 )

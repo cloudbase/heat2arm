@@ -43,7 +43,8 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         template variables for the EC2 security group.
         """
         return {
-            self._make_var_name("secGroupName"): self._heat_resource_name,
+            self._make_var_name("secGroupName"):
+                self._make_var_name("secGroup"),
         }
 
     def get_parameters(self):

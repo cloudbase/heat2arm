@@ -40,6 +40,8 @@ RESOURCE_TRANSLATORS = [
     instances.NovaServerARMTranslator,
     instances.EC2InstanceARMTranslator,
     networking.EC2SecurityGroupARMTranslator,
+    networking.EC2SecurityGroupRuleEgressARMTranslator,
+    networking.EC2SecurityGroupRuleIngressARMTranslator,
     networking.NeutronSecurityGroupARMTranslator,
     networking.NeutronRouterARMTranslator,
     networking.NeutronRouterInterfaceARMTranslator,

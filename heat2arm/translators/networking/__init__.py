@@ -21,6 +21,8 @@
 from heat2arm.translators.networking.secgroups import (
     EC2SecurityGroupARMTranslator,
     NeutronSecurityGroupARMTranslator,
+    EC2SecurityGroupRuleEgressARMTranslator,
+    EC2SecurityGroupRuleIngressARMTranslator
 )
 from heat2arm.translators.networking.floating_ips import (
     EC2eipARMTranslator,
