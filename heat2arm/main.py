@@ -19,9 +19,7 @@
 
 import argparse
 import json
-import logging
 import sys
-import warnings
 
 from heat2arm.config import CONF
 
@@ -47,20 +45,8 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _setup_logging():
-    """ _setup_logging is a helper function which sets up the logging
-    for the application and disables all Heat warnings.
-    """
-    streamformat = "%(levelname)s (%(module)s:%(lineno)d) %(message)s"
-    logging.basicConfig(level=logging.WARNING,
-                        format=streamformat)
-    warnings.simplefilter("ignore")
-
-
 def main():
     """ main is the entry point of the application. """
-    _setup_logging()
-
     args = _parse_args()
 
     if args.config_file:
