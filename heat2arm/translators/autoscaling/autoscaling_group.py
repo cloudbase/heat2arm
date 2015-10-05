@@ -94,7 +94,7 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
             ],
             "properties": {
                 "targetResourceUri": target,
-                "enabled": True,
+                "enabled": False,
                 "profiles": [self._get_profile()],
             },
         }]
@@ -320,7 +320,7 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
             LOG.warning(
                 "'%s': AutoScalingGroup '%s' has no associated ScalingPolicies"
                 " which can be translated into autoscaleSettings rules. "
-                "Fallign back to using default rules.",
+                "Falling back to using 'default_autoscaling_rules'.",
                 self, self._heat_resource_name
             )
 

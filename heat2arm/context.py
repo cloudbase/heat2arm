@@ -19,7 +19,12 @@
     which have already been declared.
 """
 
+import logging
+
 from heat2arm.config import CONF
+
+
+LOG = logging.getLogger("__heat2arm__")
 
 
 class Context(object):
@@ -60,9 +65,13 @@ class Context(object):
         directly serialized into the resulting template.
         """
         if self.__new_storage_acc_required:
+            LOG.warning("'context': addition of an extra storage account is "
+                        "required for supporting the deployment.")
             self.__set_storage_account_resource()
 
         if self.__new_virtual_network_required:
+            LOG.warning("'context': addition of an extra virtual network is "
+                        "required for supporting the deployment.")
             self.__set_virtual_network_resource()
 
         return {

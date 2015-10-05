@@ -22,6 +22,7 @@ import json
 
 from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators.instances import utils as instance_utils
 
 
 class BaseInstanceARMTranslator(BaseHeatARMTranslator):
@@ -104,8 +105,9 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         the default OS profile information.
         """
         return {
-            "computername": "[variables('vmName_%s')]" % (
-                self._heat_resource_name
+            # NOTE: computerName refuses any non-alpha-numeric characters:
+            "computerName": instance_utils.filter_non_alnum(
+                "vmName%s" % self._heat_resource_name.capitalize()
             ),
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]",

@@ -79,7 +79,8 @@ class RefFunction(Function):
                 # and return the provided args:
                 LOG.warning(
                     "Default field for parameter '%s' was not provided; "
-                    "ignoring in case it wasn't really needed.",
+                    "ignoring in case it wasn't needed and simply returning "
+                    "the name of the parameter.",
                     args
                 )
                 return args

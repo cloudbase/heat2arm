@@ -31,7 +31,7 @@ def get_azure_flavor(flavor):
                         "'%s', please edit 'nova_flavor_to_size_map' in the "
                         "configuration." % flavor)
 
-    return CONF.nova_flavor_to_size_map
+    return CONF.nova_flavor_to_size_map[flavor]
 
 
 def get_azure_image_info(nova_image):
