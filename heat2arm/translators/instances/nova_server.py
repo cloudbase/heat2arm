@@ -18,14 +18,10 @@
     a Nova server to an Azure VM.
 """
 
-import logging
-
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
 )
 from heat2arm.translators.instances import nova_utils as utils
-
-LOG = logging.getLogger(__name__)
 
 
 class NovaServerARMTranslator(BaseInstanceARMTranslator):
@@ -42,14 +38,15 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
         base_vars = self._get_base_variables()
 
         (publisher, offer, sku) = utils.get_azure_image_info(
-            self._heat_resource.properties['image'])
+            self._heat_resource.properties['image']
+        )
 
         base_vars.update({
-            "vmSize_%s" % self._name: utils.get_azure_flavor(
+            "vmSize_%s" % self._heat_resource_name: utils.get_azure_flavor(
                 self._heat_resource.properties['flavor']),
-            "imgPublisher_%s" % self._name: publisher,
-            "imgOffer_%s" % self._name: offer,
-            "imgSku_%s" % self._name: sku,
+            "imgPublisher_%s" % self._heat_resource_name: publisher,
+            "imgOffer_%s" % self._heat_resource_name: offer,
+            "imgSku_%s" % self._heat_resource_name: sku,
         })
 
         return base_vars
@@ -67,10 +64,10 @@ class NovaServerARMTranslator(BaseInstanceARMTranslator):
         """
         port_resource_names = []
 
-        if 'networks' in self._heat_resource.properties.data:
-            for port_data in self._heat_resource.properties.data["networks"]:
+        if 'networks' in self._heat_resource.properties:
+            for port_data in self._heat_resource.properties["networks"]:
                 if 'port' in port_data:
-                    port_resource_names.append(port_data['port'].args)
+                    port_resource_names.append(port_data['port'])
 
         return port_resource_names
 

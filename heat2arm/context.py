@@ -19,19 +19,32 @@
     which have already been declared.
 """
 
-from oslo_config import cfg
+import logging
 
-from heat2arm import constants
+from heat2arm.config import CONF
+
+
+LOG = logging.getLogger("__heat2arm__")
 
 
 class Context(object):
     """ Context represents the specific context of the ongoing translation.
     It holds and provides access to all already declared parameters, variables
-    and resources, as well as some important aspects to be kept in mind.
+    and resources, as well as some important aspects to be kept in mind
+    regarding the current translation (ex: should a default storage account be
+    created to support the translated deployment).
     """
-    def __init__(self, location=constants.DEFAULT_LOCATION):
+    def __init__(self, heat_resource_stack):
+        """ A Context object is created from the full Heat resource stack
+        (simply a dict of resource names to resource data mappings).
+        """
+        self.heat_resource_stack = heat_resource_stack
+        self.heat_resources = heat_resource_stack.values()
+
         self.parameters = {}
-        self.variables = {}
+        self.variables = {
+            "location": CONF.azure_location
+        }
         self.resources = []
 
         # availability_set_names is a list of the names of availability sets
@@ -47,16 +60,18 @@ class Context(object):
         # is required to be created for the deployment
         self.__new_virtual_network_required = False
 
-        self.variables["location"] = location
-
     def get_template_data(self):
         """ get_template_data returns all the data stored so far to be
         directly serialized into the resulting template.
         """
         if self.__new_storage_acc_required:
+            LOG.warning("'context': addition of an extra storage account is "
+                        "required for supporting the deployment.")
             self.__set_storage_account_resource()
 
         if self.__new_virtual_network_required:
+            LOG.warning("'context': addition of an extra virtual network is "
+                        "required for supporting the deployment.")
             self.__set_virtual_network_resource()
 
         return {
@@ -92,14 +107,34 @@ class Context(object):
         """
         self.__new_virtual_network_required = True
 
-    def get_resource(self, resource):
-        """ get_resource returns the dict of the resource which matches the
-        given fields.
+    def get_arm_resource(self, resource_props):
+        """ get_arm_resource returns the dict of the existing ARM resource
+        which matches the provided properties.
         """
         for res in self.resources:
             if all((k in res and res[k] == v) for k, v in
-                   resource.items()):
+                   resource_props.items()):
                 return res
+
+    def get_heat_resources(self, resource_props):
+        """ get_heat_resources returns the list of all Heat resource present in
+        the template which satisfy the provided properties.
+        """
+        resources = []
+
+        for res in self.heat_resources:
+            props = res.properties
+            if all((k in props and props[k] == v) for k, v in
+                   resource_props.items()):
+                resources.append(res)
+
+        return resources
+
+    def get_ref_heat_resource(self, heat_resource, property_name):
+        """ get_ref_heat_resource
+        """
+        resource_name = heat_resource.properties[property_name]
+        return self.heat_resource_stack[resource_name]
 
     def __set_storage_account_resource(self):
         """ __set_storage_account_resource is a helper method which sets the
@@ -117,15 +152,15 @@ class Context(object):
         })
 
         self.variables.update({
-            'storageAccountType': cfg.CONF.default_azure_storage_account_type,
+            'storageAccountType': CONF.azure_storage_account_type,
             "vmStorageAccountContainerName":
-                cfg.CONF.default_storage_container_name,
+                CONF.azure_storage_container_name
         })
 
         self.resources.append({
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[parameters('newStorageAccountName')]",
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "location": "[variables('location')]",
             "properties": {
                 "accountType": "[variables('storageAccountType')]"
@@ -142,7 +177,7 @@ class Context(object):
                 "type": "string",
                 "metadata": {
                     "description": "Name of the Virtual Network to be created"
-                                   "for this deployment."
+                                   " for supporting this deployment."
                 }
             }
         })
@@ -159,7 +194,7 @@ class Context(object):
         self.resources.append({
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('newVirtualNetworkName')]",
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "location": "[variables('location')]",
             "properties": {
                 "subnets": [{

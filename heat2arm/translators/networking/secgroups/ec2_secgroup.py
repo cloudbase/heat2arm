@@ -36,12 +36,12 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
         rules = []
 
         # traverse all ingress rules; if any:
-        if "SecurityGroupIngress" in self._heat_resource.properties.data:
-            for in_rule in self._heat_resource.properties.data[
+        if "SecurityGroupIngress" in self._heat_resource.properties:
+            for in_rule in self._heat_resource.properties[
                     "SecurityGroupIngress"]:
                 # build the rule:
                 rule = {
-                    "name": "%s_rule_%d" % (self._name, i),
+                    "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
                         "protocol": in_rule["IpProtocol"],
                         "sourcePortRange": in_rule["FromPort"],
@@ -59,12 +59,12 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
                 rules.append(rule)
 
         # traverse all egress rules; if any:
-        if "SecurityGroupEgress" in self._heat_resource.properties.data:
-            for out_rule in self._heat_resource.properties.data[
+        if "SecurityGroupEgress" in self._heat_resource.properties:
+            for out_rule in self._heat_resource.properties[
                     "SecurityGroupEgress"]:
                 # build the rule:
                 rule = {
-                    "name": "%s_rule_%d" % (self._name, i),
+                    "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
                         "protocol": out_rule["IpProtocol"],
                         "sourcePortRange": out_rule["FromPort"],

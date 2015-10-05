@@ -18,14 +18,6 @@
 """
 
 
-def get_ref_heat_resource(heat_resource, property_name):
-    """ get_ref_heat_resource is a helper function which returns the property
-    with the given name from the given Heat resource object.
-    """
-    resource_name = heat_resource.properties.data[property_name].args
-    return heat_resource.stack[resource_name]
-
-
 class BaseHeatARMTranslator(object):
     """ BaseHeatARMTranslator is the base class for all heat to ARM translators
 
@@ -38,15 +30,14 @@ class BaseHeatARMTranslator(object):
 
     def __init__(self, heat_resource, context):
         self._heat_resource = heat_resource
-        self._name = self._heat_resource.name
+        self._heat_resource_name = self._heat_resource.name
         self._context = context
 
-    def _make_var_name(self, var):
-        """ _get_var_name is a helper method which constructs the
-        name to be used as an ARM template variable.
-        The result is of the form <parameter_name>_<self._name>.
+    def __str__(self):
+        """ __str__ returns a formatted string containing the translator's
+        name and the resource assigned to the translator.
         """
-        return "%s_%s" % (var, self._name)
+        return "%s(%s)" % (self.__class__.__name__, self._heat_resource.name)
 
     def get_parameters(self):
         """ get_parameters returns the dict of ARM template parameters
@@ -89,6 +80,16 @@ class BaseHeatARMTranslator(object):
         """
         self._context.add_parameters(self.get_parameters())
         self._context.add_variables(self.get_variables())
-        res = self.get_resource_data()
-        if res:
-            self._context.add_resource(res)
+        for resource in self.get_resource_data():
+            # NOTE: adding check here in the case of resources which are indeed
+            # translated under different resource translator's functions but
+            # do not result in any resource data themselves.
+            if resource:
+                self._context.add_resource(resource)
+
+    def _make_var_name(self, var):
+        """ _get_var_name is a helper method which constructs the
+        name to be used as an ARM template variable.
+        The result is of the form <parameter_name>_<self._heat_resource_name>.
+        """
+        return "%s_%s" % (var, self._heat_resource_name)

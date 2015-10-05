@@ -14,7 +14,7 @@
 #    under the License.
 
 """
-    Contains all the basic layout of the translation engine.
+    This module contains the main logic of the translation engine.
 """
 
 import collections
@@ -23,53 +23,25 @@ import jsonschema
 import logging
 import requests
 
-from oslo_config import cfg
-
-from heat.engine import stack
-from heat.engine import template
-from heat.tests import utils as test_utils
-
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.context import Context
+from heat2arm.parser.parsing import parse_template
+from heat2arm.translators import autoscaling
 from heat2arm.translators import instances
 from heat2arm.translators import networking
 from heat2arm.translators import storage
 
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("__heat2arm__")
 
-CONF = cfg.CONF
-CONF.register_opts([
-    cfg.StrOpt(
-        'default_azure_location',
-        default=constants.DEFAULT_LOCATION,
-        help='Default Azure location'),
-    cfg.StrOpt(
-        'default_azure_storage_account_type',
-        default=constants.DEFAULT_STORAGE_ACCOUNT_TYPE,
-        choices=["Standard_LRS",
-                 "Standard_ZRS",
-                 "Standard_GRS",
-                 "Standard_RAGRS",
-                 "Premium_LRS"],
-        help='Default Azure storage account type'),
-    cfg.StrOpt(
-        'default_storage_container_name',
-        default=constants.DEFAULT_STORAGE_CONTAINER_NAME,
-        help='Default name of the storage container.'
-    ),
-    cfg.BoolOpt(
-        'validate_arm_template_schema',
-        default=False,
-        help='Validate the generated ARM template schema'),
-])
-
-CTX = Context(CONF.default_azure_location)
-
+# RESOURCE_TRANSLATORS is a list of all the resource translator
+# classes to be used within the translation process.
 RESOURCE_TRANSLATORS = [
     instances.NovaServerARMTranslator,
     instances.EC2InstanceARMTranslator,
     networking.EC2SecurityGroupARMTranslator,
+    networking.EC2SecurityGroupRuleEgressARMTranslator,
+    networking.EC2SecurityGroupRuleIngressARMTranslator,
     networking.NeutronSecurityGroupARMTranslator,
     networking.NeutronRouterARMTranslator,
     networking.NeutronRouterInterfaceARMTranslator,
@@ -83,6 +55,9 @@ RESOURCE_TRANSLATORS = [
     storage.CinderVolumeAttachmentARMTranslator,
     storage.EBSVolumeARMTranslator,
     storage.EBSVolumeAttachmentARMTranslator,
+    autoscaling.AWSAutoScalingGroupARMTranslator,
+    autoscaling.AWSScalingPolicyARMTranslator,
+    autoscaling.AWSLaunchConfigurationARMTranslator
 ]
 
 
@@ -94,31 +69,32 @@ def validate_template_data(template_data):
     jsonschema.validate(template_data, schema)
 
 
-def get_resource_translator(heat_resource):
+def get_resource_translator(heat_resource, context):
     """ get_resource_translator runs through all the available trainslators and
     finds the appropriate one for the given heat resource type or logs a
     warning message if no translator is available.
     """
     res_trans = None
     for trans in RESOURCE_TRANSLATORS:
-        if trans.heat_resource_type == heat_resource.type():
+        # TODO
+        if trans.heat_resource_type == heat_resource.type:
             res_trans = trans
 
     if res_trans:
-        return res_trans(heat_resource, CTX)
+        return res_trans(heat_resource, context)
     else:
         LOG.warn('Could not find a corresponding ARM resource for Heat '
-                 'resource "%s"', heat_resource.type())
+                 'resource "%s"', heat_resource.type)
 
 
 def get_arm_schema():
     """ get_arm_schema fetches the ARM schema from its default URL. """
-    response = requests.get(constants.ARM_SCHEMA_URL)
+    response = requests.get(CONF.arm_schema_url)
     response.raise_for_status()
     return json.loads(response.text)
 
 
-def get_arm_template(resources):
+def get_arm_template(resources, context):
     """ get_arm_template takes a list of resources and returns a dict which is
     directly renderable into the JSON of an ARM template.
     """
@@ -131,15 +107,11 @@ def get_arm_template(resources):
     for resource in resources:
         resource.update_context()
 
-    template_data = CTX.get_template_data()
-    template_data.update({
-        "$schema": constants.ARM_SCHEMA_URL,
-        "contentVersion": constants.ARM_TEMPLATE_VERSION
-    })
+    template_data = context.get_template_data()
 
     return collections.OrderedDict([
-        ("contentVersion", constants.ARM_TEMPLATE_VERSION),
-        ("$schema", constants.ARM_SCHEMA_URL),
+        ("contentVersion", CONF.arm_template_version),
+        ("$schema", CONF.arm_schema_url),
         ("parameters", template_data["parameters"]),
         ("variables", template_data["variables"]),
         ("resources", template_data["resources"])
@@ -150,22 +122,18 @@ def convert_template(heat_template_data):
     """ convert_template takes a heat template and converts it into an ARM
     template.
     """
-    temp = template.Template(heat_template_data)
-    temp.validate()
+    heat_stack = parse_template(heat_template_data)
 
-    ctx = test_utils.dummy_context()
-
-    heat_stack = stack.Stack(context=ctx, stack_name="Dummy", tmpl=temp)
-    temp.validate_resource_definitions(heat_stack)
+    context = Context(heat_stack)
 
     arm_resources = []
-    for heat_resource in heat_stack.iter_resources():
-        res_trans = get_resource_translator(heat_resource)
+    for heat_resource in heat_stack.values():
+        res_trans = get_resource_translator(heat_resource, context)
         if res_trans:
             arm_resources.append(res_trans)
 
-    arm_template_data = get_arm_template(arm_resources)
-    if CONF.validate_arm_template_schema:
+    arm_template_data = get_arm_template(arm_resources, context)
+    if CONF.validate_arm_template_data:
         validate_template_data(arm_template_data)
 
     return arm_template_data

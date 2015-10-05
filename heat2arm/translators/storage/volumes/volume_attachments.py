@@ -18,6 +18,9 @@
 """
 
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators.storage.volumes.exceptions import (
+    VolumeTargetInstanceNotFoundException
+)
 
 
 class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
@@ -37,7 +40,7 @@ class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
         """ _get_volume_name is a helper method which returns the name of the
         volume to be attached.
 
-        It is stubbed and shoul be implemented by inheriting classes.
+        It is stubbed and should be implemented by inheriting classes.
         """
         pass
 
@@ -47,10 +50,17 @@ class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
         """
         volume_name = self._get_volume_name()
 
-        res = self._context.get_resource({
+        res = self._context.get_arm_resource({
             "type": "Microsoft.Compute/virtualMachines",
             "name":  "[variables('vmName_%s')]" % self._get_instance_name()
         })
+        if not res:
+            raise VolumeTargetInstanceNotFoundException(
+                "'%s': unable to find VM '%s' to attach to." % (
+                    self,
+                    self._get_instance_name()
+                )
+            )
 
         if "dataDisks" not in res["properties"]["storageProfile"]:
             res["properties"]["storageProfile"]["dataDisks"] = []
@@ -59,6 +69,7 @@ class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
             "name": volume_name,
             "diskSizeGB": "[parameters('size_%s')]" %
                           volume_name,
+            # NOTE: the following always makes the lun the first one available:
             "lun": len(res["properties"]["storageProfile"]["dataDisks"]),
             "vhd": {
                 "Uri": "[variables('diskUri_%s')]" %
@@ -81,13 +92,13 @@ class CinderVolumeAttachmentARMTranslator(BaseVolumeAttachmentTranslator):
         """ _get_volume_name returns the name of the Cinder volume
         referred to by the attachment.
         """
-        return self._heat_resource.properties.data["volume_id"].args
+        return self._heat_resource.properties["volume_id"]
 
     def _get_instance_name(self):
         """ _get_instance_name returns the name of the Nova server
         referred to by the attachment.
         """
-        return self._heat_resource.properties.data["instance_uuid"].args
+        return self._heat_resource.properties["instance_uuid"]
 
 
 class EBSVolumeAttachmentARMTranslator(BaseVolumeAttachmentTranslator):
@@ -103,10 +114,10 @@ class EBSVolumeAttachmentARMTranslator(BaseVolumeAttachmentTranslator):
         """ _get_volume_name returns the name of the EBS volume
         referred to by the attachment.
         """
-        return self._heat_resource.properties.data["VolumeId"].args
+        return self._heat_resource.properties["VolumeId"]
 
     def _get_instance_name(self):
         """ _get_instance_name returns the name of the EC2 instance
         referred to by the attachment.
         """
-        return self._heat_resource.properties.data["InstanceId"].args
+        return self._heat_resource.properties["InstanceId"]

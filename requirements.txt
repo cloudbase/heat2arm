@@ -1,7 +1,5 @@
-# NOTE: also requires Heat itself; which must be installed manually:
-# https://github.com/openstack/heat
-pbr
-oslo.config
-PyYAML
 jsonschema
+oslo.config>=2.2.0
+pbr
+PyYAML
 requests

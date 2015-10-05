@@ -17,7 +17,7 @@
     Defines the base translator for floating IP resource types.
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -33,7 +33,7 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         to the Neutron floating IP.
         """
         return {
-            "dnsNameForPublicIP_%s" % self._name: {
+            "dnsNameForPublicIP_%s" % self._heat_resource_name: {
                 "type": "string",
                 "metadata": {
                     "description": "Unique DNS name for public IP address."
@@ -46,7 +46,8 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         with the Neutron Floating IP's translation.
         """
         return {
-            "publicIPAddressName_%s" % self._name: self._name,
+            "publicIPAddressName_%s" % self._heat_resource_name:
+                self._heat_resource_name,
         }
 
     def get_resource_data(self):
@@ -55,16 +56,20 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         into the resulting ARM template format.
         """
         return [{
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[variables('publicIPAddressName_%s')]" % self._name,
+            "name": "[variables('publicIPAddressName_%s')]" % (
+                self._heat_resource_name
+            ),
             "location": "[variables('location')]",
             "properties": {
                 # TODO: Add support for static IPs
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
                     "domainNameLabel":
-                    "[parameters('dnsNameForPublicIP_%s')]" % self._name
+                        "[parameters('dnsNameForPublicIP_%s')]" % (
+                            self._heat_resource_name
+                        )
                     }
                 }
             }]

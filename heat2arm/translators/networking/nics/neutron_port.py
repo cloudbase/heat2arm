@@ -17,7 +17,6 @@
     Defines the translator for a Neutron port resource.
 """
 
-from heat2arm.translators.base import get_ref_heat_resource
 from heat2arm.translators.networking.nics.base_nic import BaseNICARMTranslator
 
 
@@ -40,9 +39,9 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         returns the name of the floating IP resource associated to
         this NIC-like resource.
         """
-        for heat_resource in self._heat_resource.stack.iter_resources():
-            if heat_resource.type() == "OS::Neutron::FloatingIP":
-                port_resource = get_ref_heat_resource(
+        for heat_resource in self._context.heat_resources:
+            if heat_resource.type == "OS::Neutron::FloatingIP":
+                port_resource = self._context.get_ref_heat_resource(
                     heat_resource, 'port_id')
                 if port_resource is self._heat_resource:
                     return heat_resource.name
@@ -51,5 +50,14 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         """ _get_ref_network is a helper function which returns the name
         of the network which references this NIC-like resource.
         """
-        if "network" in self._heat_resource.properties.data:
-            return get_ref_heat_resource(self._heat_resource, "network")
+        # TODO(aznashwan): once we get some sort of field obsoletence or
+        # alternate naming mechanism set up in the parser, avoid searching for
+        # both field names here:
+        if "network" in self._heat_resource.properties:
+            return self._context.get_ref_heat_resource(
+                self._heat_resource, "network"
+            )
+        if "network_id" in self._heat_resource.properties:
+            return self._context.get_ref_heat_resource(
+                self._heat_resource, "network_id"
+            )

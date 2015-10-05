@@ -17,7 +17,7 @@
     Defines the translator and auxiliary functions for EC2 instances.
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.instances import ec2_utils as utils
 from heat2arm.translators.instances.base_instance import (
     BaseInstanceARMTranslator
@@ -66,34 +66,45 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         """
         super(EC2InstanceARMTranslator, self).update_context()
 
-        res = self._context.get_resource({
+        res = self._context.get_arm_resource({
             "type": self.heat_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
         })
 
-        # check for the existence of an availability zone and add a
-        # variable for its name, list it as a dependency and add it:
+        # check for the existence of an AvailabilityZone set for the instance:
         avail_zone = self._get_availability_zone()
         if avail_zone:
+            # if present, add the availabilitySet as a dependency:
             res["dependsOn"].append(
                 "[concat('Microsoft.Compute/availabilitySets/',"
                 "variables('availabilitySetName_%s'))]" % avail_zone
             )
 
+            # also, check to ensure the availabilitySet is defined:
             if avail_zone not in self._context.availability_set_names:
+                # add the name and resource data of the availabilitySet
+                # to the overall translation:
                 self._context.add_variables({
                     "availabilitySetName_%s" % avail_zone:
                         "availabilitySet_%s" % avail_zone
                 })
 
                 self._context.add_resource({
-                    "apiVersion": constants.ARM_API_VERSION,
+                    "apiVersion": CONF.arm_api_version,
                     "type": "Microsoft.Compute/availabilitySets",
                     "name": "[variables('availabilitySetName_%s')]" %
                             avail_zone,
                     "location": "[variables('location')]",
-                    "properties": {}
+                    "properties": {
+                        "platformFaultDomainCount": "%s" % (
+                            CONF.arm_fault_domain_count
+                        )
+                    }
                 })
+
+                # and finally; register the name of the availabilitySet
+                # which will be created:
+                self._context.availability_set_names.append(avail_zone)
 
     def _get_vm_properties(self):
         """ _get_vm_properties is a helper method which returns all the
@@ -119,16 +130,18 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         """
         port_resource_names = []
 
-        for resource in self._heat_resource.stack.iter_resources():
+        for resource in self._context.heat_resources:
             # NOTE: because you can define both Neutron networking resources
             # and AWS ones in heat templates; we must check for both here:
-            if (resource.type() == "OS::Neutron::Port"
-                    and "device_id" in resource.properties.data
-                    and resource.properties.data["device_id"] == self._name):
+            if (resource.type == "OS::Neutron::Port"
+                    and "device_id" in resource.properties
+                    and resource.properties["device_id"] ==
+                    self._heat_resource_name):
                 port_resource_names.append(resource.name)
-            if (resource.type() == "AWS::EC2::EIPAssociation"
-                    and "InstanceId" in resource.properties.data
-                    and resource.properties.data["InstanceId"] == self._name):
+            if (resource.type == "AWS::EC2::EIPAssociation"
+                    and "InstanceId" in resource.properties
+                    and resource.properties["InstanceId"] ==
+                    self._heat_resource_name):
                 port_resource_names.append(resource.name)
 
         return port_resource_names

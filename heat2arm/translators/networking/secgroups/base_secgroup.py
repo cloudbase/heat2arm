@@ -18,7 +18,7 @@
     translations.
 """
 
-from heat2arm import constants
+from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 
 
@@ -34,7 +34,7 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         the resulting ARM security group rules to be created
         following the translation.
 
-        NOTE: this is stubbed and must be implemented in all inheriting classes.
+        NOTE: it is stubbed and must be implemented in all inheriting classes.
         """
         return []
 
@@ -43,7 +43,8 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         template variables for the EC2 security group.
         """
         return {
-            self._make_var_name("secGroupName"): self._name,
+            self._make_var_name("secGroupName"):
+                self._make_var_name("secGroup"),
         }
 
     def get_parameters(self):
@@ -69,7 +70,7 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
         resulting ARM template for this resource.
         """
         return [{
-            "apiVersion": constants.ARM_API_VERSION,
+            "apiVersion": CONF.arm_api_version,
             "type": self.arm_resource_type,
             "name": ("[variables('secGroupName_%s')]" %
                      self._heat_resource.name),

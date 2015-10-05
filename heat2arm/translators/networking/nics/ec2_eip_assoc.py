@@ -17,7 +17,6 @@
     Defines the translator for a EC2 elastic IP resource.
 """
 
-from heat2arm.translators.base import get_ref_heat_resource
 from heat2arm.translators.networking.nics.base_nic import BaseNICARMTranslator
 
 
@@ -42,16 +41,18 @@ class EC2eipAssocARMTranslator(BaseNICARMTranslator):
         """
         # The way it's layed out in CFN; we just trivially return
         # the value of the EIP that is contained in the Association:
-        if "EIP" in self._heat_resource.properties.data:
-            return self._heat_resource.properties.data["EIP"].args
+        if "EIP" in self._heat_resource.properties:
+            return self._heat_resource.properties["EIP"]
 
     def _get_ref_network(self):
         """ _get_ref_network is a helper function which returns the name
         of the network which references this NIC-like resource.
         """
-        if "NetworkInterfaceId" in self._heat_resource.properties.data:
-            return get_ref_heat_resource(self._heat_resource,
-                                         "NetworkInterfaceId")
+        if "NetworkInterfaceId" in self._heat_resource.properties:
+            return self._context.get_ref_heat_resource(
+                self._heat_resource,
+                "NetworkInterfaceId"
+            )
         else:
             # the resulting Azure network interface will be attached to the
             # default VN whose creation must be signaled here:
