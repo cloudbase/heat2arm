@@ -14,29 +14,22 @@
 #    under the License.
 
 """
-    This module cotains definitions for various exception classes which are
-    raised during the translation process of Security groups.
+    This module contains definitions for specific exceptions which may
+    be encountered during the translation of various security group resources.
 """
 
 from heat2arm.translators import exceptions
 
 
 class SecurityGroupMissingFieldException(exceptions.MissingFieldException):
-    """ SecurityGroupMissingFieldException is raised when a required field from
-    a translated security group is missing.
+    """ SecurityGroupMissingFieldException is raised whenever a missing
+    field is not found during the translation of a network security group.
     """
     pass
 
 
 class SecurityGroupInvalidFieldException(exceptions.InvalidFieldException):
-    """ SecurityGroupInvalidFieldException is raised when the value of a field
-    of a security group that is undergoing the translation process is invalid.
-    """
-    pass
-
-
-class SecurityGroupNotFoundException(exceptions.HeatResourceNotFoundException):
-    """ SecurityGroupNotFoundException is raised whenever a referenced security
-    group is not found.
+    """ SecurityGroupInvalidFieldException is raised whenever a defined
+    security group has an invalid value within one of its fields.
     """
     pass

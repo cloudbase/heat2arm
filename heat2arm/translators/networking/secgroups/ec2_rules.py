@@ -111,6 +111,16 @@ class BaseEC2SecurityGroupRuleARMTranslator(BaseHeatARMTranslator):
                     "field." % (self, self._heat_resource_name, field)
                 )
 
+        # validate the value of IpProtocol:
+        allowed_protos = ["tcp", "udp", "*"]
+        if (self._heat_resource.properties["IpProtocol"].lower() not in
+                allowed_protos):
+            raise exceptions.SecurityGroupInvalidFieldException(
+                "'%s': Invalid value '%s' provided for 'IpProtocol'. "
+                "only include 'tcp', 'udp' and '*'.", self,
+                self._heat_resource.properties["IpProtocol"]
+            )
+
     def _get_rule(self):
         """ _get_rule returns the resulting ARM rule to be injected into
         the target security group.
