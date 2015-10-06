@@ -17,8 +17,8 @@
     This module contains definitions for CFN template functions.
 """
 
+from heat2arm.config import CONF
 from heat2arm.parser.common import functions
-from heat2arm.parser.cfn.constants import CFN_TEMPLATE_DEFAULTS
 
 
 class CFNRefFunction(functions.RefFunction):
@@ -37,11 +37,7 @@ class CFNRefFunction(functions.RefFunction):
     """
     name = "Ref"
     _param_default_field_name = "Default"
-    _exceptions = {
-        "AWS::StackId": "heat2arm_stack_id",
-        "AWS::StackName": "heat2arm_stack_name",
-        "AWS::Region": "heat2arm_region"
-    }
+    _exceptions = CONF.cfn_ref_exceptions
 
 
 class CFNJoinFunction(functions.JoinFunction):
@@ -73,7 +69,7 @@ class CFNGetAttrFunction(functions.GetAttrFunction):
     """
     name = "Fn::GetAtt"
     _properties_field_name = "Properties"
-    _exceptions = CFN_TEMPLATE_DEFAULTS
+    _exceptions = CONF.cfn_getatt_exceptions
 
 
 class CFNFindInMapFunction(functions.MapFindFunction):

@@ -23,6 +23,7 @@ from oslo_config import cfg
 
 CONF = cfg.CONF
 CONF.register_opts([
+    # ####################### General Azure options:
     cfg.StrOpt(
         'azure_location',
         default="West US",
@@ -45,12 +46,6 @@ CONF.register_opts([
         default='vhds',
         help='The name of the storage container to be used for the deployment.'
     ),
-    cfg.BoolOpt(
-        'validate_arm_template_data',
-        default=False,
-        help='Flag on whether or not to perform schema validation on the'
-             'resulting template.'
-    ),
     cfg.StrOpt(
         'arm_api_version',
         default="2015-05-01-preview",
@@ -68,6 +63,7 @@ CONF.register_opts([
         default="1.0.0.0",
         help="The version to be stamped onto the resulting ARM template."
     ),
+    # ####################### CFN template translation options:
     cfg.DictOpt(
         "ec2_flavor_to_size_map",
         default={
@@ -89,6 +85,25 @@ CONF.register_opts([
         },
         help="A map between EC2 image names and Azure ones.",
     ),
+    cfg.DictOpt(
+        'cfn_ref_exceptions',
+        default={
+            "AWS::StackId": "heat2arm_stack_id",
+            "AWS::StackName": "heat2arm_stack_name",
+            "AWS::Region": "heat2arm_region"
+        },
+        help="An argument-value mapping for exceptions to be applied with the "
+             "CFN Ref function."
+    ),
+    cfg.DictOpt(
+        'cfn_getatt_exceptions',
+        default={
+            "AvailabilityZone": "heat2arm_az"
+        },
+        help="An argument-value mapping for exceptions to be applied by the "
+             "CFN GetAtt function."
+    ),
+    # ####################### Heat template translation options:
     cfg.DictOpt(
         'nova_flavor_to_size_map',
         default={
@@ -168,5 +183,12 @@ CONF.register_opts([
                 "cooldown": "PT1H"
             }
         }]
+    ),
+    # ####################### General converter-related options:
+    cfg.BoolOpt(
+        'validate_arm_template_data',
+        default=False,
+        help='Flag on whether or not to perform schema validation on the'
+             'resulting template.'
     )
 ])

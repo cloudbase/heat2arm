@@ -28,7 +28,7 @@ LOG = logging.getLogger("__heat2arm__")
 class Resource(object):
     """ Resource defines the basic properties of any resource.
 
-    It makes available the data organised thorugh the following fields:
+    It makes available the data organised through the following fields:
         - name - the name of the resource
         - properties - the dict of properties for the Resource
         - meta - the dict of metadata for the resource (if applicable)

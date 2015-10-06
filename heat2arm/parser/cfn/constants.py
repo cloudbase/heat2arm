@@ -32,8 +32,3 @@ CFN_TEMPLATE_FIELDS = {
     "heat_temp_format_version": "HeatTemplateFormatVersion",
     "outputs": "Outputs"
 }
-
-CFN_TEMPLATE_DEFAULTS = {
-    # NOTE: this may bite back real hard when translating AutoScalingGroups:
-    "AvailabilityZone": "DefaultAZ",
-}
