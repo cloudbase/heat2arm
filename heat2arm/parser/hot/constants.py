@@ -21,7 +21,6 @@
 # names which are characteristic of Heat templates.
 HEAT_TEMPLATE_FIELDS = {
     "description": "description",
-    "variables": "",  # TODO
     "parameters": "parameters",
     "type": "type",
     "meta": "",

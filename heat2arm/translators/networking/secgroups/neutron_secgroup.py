@@ -28,6 +28,10 @@ class NeutronSecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
     """
     heat_resource_type = "OS::Neutron::SecurityGroup"
 
+    _protocol_field_name = "protocol"
+
+    _mandatory_rule_fields = ["port_range_min", "port_range_max"]
+
     def _get_rules(self):
         """ _get_rules is a helper method which returns a list of all
         the resulting ARM security group rules to be created.
@@ -37,7 +41,13 @@ class NeutronSecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
 
         # traverse all the rules and add them:
         if "rules" in self._heat_resource.properties:
-            for rule in self._heat_resource.properties["rules"]:
+            neutron_rules = self._heat_resource.properties["rules"]
+
+            # first; validate the rules:
+            self._validate_rules(neutron_rules)
+
+            # then, go ahead and translate them:
+            for rule in neutron_rules:
                 # get the port range or default to *:
                 port_range = "*"
                 if "port_range_min" in rule and "port_range_max" in rule:

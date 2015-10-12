@@ -18,8 +18,10 @@
     translations.
 """
 
+
 from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
+from heat2arm.translators.networking.secgroups import exceptions
 
 
 class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
@@ -28,6 +30,14 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
     implementations to be used in inheriting translators.
     """
     arm_resource_type = "Microsoft.Network/networkSecurityGroups"
+
+    # _protocol_field_name stores the string representation of the
+    # field which specifies the protocol a rule is managing:
+    _protocol_field_name = ""
+
+    # _mandatory_rule_fields is a list of the names of the fields that
+    # all rules require:
+    _mandatory_rule_fields = []
 
     def _get_rules(self):
         """ _get_rules is a helper method which returns a list of all
@@ -79,3 +89,44 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
                 "securityRules": self._get_rules()
             }
         }]
+
+    def _validate_rules(self, rules):
+        """ _validate_rules is a helper method which recieves a list of raw
+        rule definitions and ensures that all the mandatory fields of the rule
+        are specified and that the protocol specified within them is supported
+        by Azure security groups.
+        """
+        supported_protos = ["tcp", "udp", "*"]  # NOTE: '*' = both udp and tcp
+
+        for ruleno, rule in enumerate(rules):
+            # first; check that the field is there in the first place:
+            if self._protocol_field_name not in rule:
+                raise exceptions.SecurityGroupMissingFieldException(
+                    "'%s': security group '%s''s rule number %d has no '%s'"
+                    "field defined." % (
+                        self, self._heat_resource_name,
+                        ruleno + 1, self._protocol_field_name
+                    )
+                )
+
+            # then, ensure the protocol is ok:
+            proto = rule[self._protocol_field_name]
+            if proto.lower() not in supported_protos:
+                raise exceptions.SecurityGroupInvalidFieldException(
+                    "'%s': security group '%s' rule number %d has an invalid '"
+                    "%s' field: '%s'. Valid protocols are 'tcp', 'udp' and '*'"
+                    % (
+                        self, self._heat_resource_name, ruleno + 1,
+                        self._protocol_field_name, proto
+                    )
+                )
+
+            # lastly, check for all the other mandatory fields:
+            for field in self._mandatory_rule_fields:
+                if field not in rule:
+                    raise exceptions.SecurityGroupMissingFieldException(
+                        "'%s': security group '%s' rule number %d's '%s' field"
+                        " is missing." % (
+                            self, self._heat_resource_name, ruleno + 1, field
+                        )
+                    )

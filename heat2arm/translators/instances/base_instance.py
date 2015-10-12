@@ -18,8 +18,6 @@
     both Nova and EC2 instance translators.
 """
 
-import json
-
 from heat2arm.config import CONF
 from heat2arm.translators.base import BaseHeatARMTranslator
 from heat2arm.translators.instances import utils as instance_utils
@@ -62,9 +60,19 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ _get_base_variables is a helper method which retuns the list of
         variables all instance translations require.
         """
-        return {
+        base_vars = {
             self._make_var_name("vmName"): self._heat_resource_name,
         }
+
+        # NOTE: in order to avoid Linux userdata escaping problems, we simply
+        # put the userdata of the VM within a variable we later reference:
+        user_data = self._get_userdata()
+        if user_data:
+            base_vars.update({
+                self._make_var_name("customData"): user_data
+            })
+
+        return base_vars
 
     def _get_ref_port_resource_names(self):
         """ _get_ref_port_resource_names is a helper method which returns a
@@ -155,10 +163,13 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         # add the userData:
         os_profile_data = self._get_base_os_profile_data()
 
+        # NOTE: in order to avoid any templating laguage escaping problems; we
+        # must put the [eventual] userdata into a variable which we reference:
         user_data = self._get_userdata()
         if user_data:
             os_profile_data["customData"] = (
-                "[base64('%s')]" % json.dumps(user_data))
+                "[base64(variables('%s'))]" % self._make_var_name("customData")
+            )
 
         vm_properties.update({
             "osProfile": os_profile_data,

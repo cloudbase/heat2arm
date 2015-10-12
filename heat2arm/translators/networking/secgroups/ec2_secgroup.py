@@ -28,6 +28,10 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
     """
     heat_resource_type = "AWS::EC2::SecurityGroup"
 
+    _protocol_field_name = "IpProtocol"
+
+    _mandatory_rule_fields = ["FromPort", "ToPort"]
+
     def _get_rules(self):
         """ _get_rules is a helper method which returns a list of all
         the resulting ARM security group rules to be created.
@@ -37,9 +41,13 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
 
         # traverse all ingress rules; if any:
         if "SecurityGroupIngress" in self._heat_resource.properties:
-            for in_rule in self._heat_resource.properties[
-                    "SecurityGroupIngress"]:
-                # build the rule:
+            in_rules = self._heat_resource.properties["SecurityGroupIngress"]
+
+            # first; ensure they are valid:
+            self._validate_rules(in_rules)
+
+            for in_rule in in_rules:
+                # build the resulting rule:
                 rule = {
                     "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
@@ -60,9 +68,12 @@ class EC2SecurityGroupARMTranslator(BaseSecurityGroupARMTranslator):
 
         # traverse all egress rules; if any:
         if "SecurityGroupEgress" in self._heat_resource.properties:
-            for out_rule in self._heat_resource.properties[
-                    "SecurityGroupEgress"]:
-                # build the rule:
+            out_rules = self._heat_resource.properties["SecurityGroupEgress"]
+
+            # first; ensure they are valid:
+            self._validate_rules(out_rules)
+
+            for out_rule in out_rules:
                 rule = {
                     "name": "%s_rule_%d" % (self._heat_resource_name, i),
                     "properties": {
