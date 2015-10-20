@@ -38,6 +38,8 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
         """ get_parameters returns the dict with the size parameter that all
         volumes must have.
         """
+        super(BaseVolumeARMTranslator, self).get_parameters()
+
         return {
             self._make_var_name("size"): {
                 "type": "string",
@@ -51,6 +53,8 @@ class BaseVolumeARMTranslator(BaseHeatARMTranslator):
         """ get_variables returns a dict cotaining the variable
         which will be storing the volume's URI on Azure.
         """
+        super(BaseVolumeARMTranslator, self).get_variables()
+
         return {
             "diskUri_%s" % self._heat_resource_name:
                 "[concat('http://',parameters('newStorageAccountName'),"

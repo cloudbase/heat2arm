@@ -25,8 +25,10 @@ class NeutronRouterARMTranslator(BaseHeatARMTranslator):
 
     It has no direct Azure equivalent; so its translation is thus empty.
     """
-    # No direct ARM resource translation
     heat_resource_type = "OS::Neutron::Router"
+
+    # No direct ARM resource translation
+    arm_resource_type = ""
 
 
 class NeutronRouterInterfaceARMTranslator(BaseHeatARMTranslator):
@@ -35,5 +37,7 @@ class NeutronRouterInterfaceARMTranslator(BaseHeatARMTranslator):
 
     It has no direct Azure equivalent; so its translation is thus empty.
     """
-    # No direct ARM resource translation
     heat_resource_type = "OS::Neutron::RouterInterface"
+
+    # No direct ARM resource translation
+    arm_resource_type = ""

@@ -41,8 +41,9 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         """
         for heat_resource in self._context.heat_resources:
             if heat_resource.type == "OS::Neutron::FloatingIP":
-                port_resource = self._context.get_ref_heat_resource(
-                    heat_resource, 'port_id')
+                port_resource = self._context.heat_resource_stack[
+                    heat_resource.properties['port_id']
+                ]
                 if port_resource is self._heat_resource:
                     return heat_resource.name
 
@@ -54,10 +55,10 @@ class NeutronPortARMTranslator(BaseNICARMTranslator):
         # alternate naming mechanism set up in the parser, avoid searching for
         # both field names here:
         if "network" in self._heat_resource.properties:
-            return self._context.get_ref_heat_resource(
-                self._heat_resource, "network"
-            )
+            return self._context.heat_resource_stack[
+                self._heat_resource.properties["network"]
+            ]
         if "network_id" in self._heat_resource.properties:
-            return self._context.get_ref_heat_resource(
-                self._heat_resource, "network_id"
-            )
+            return self._context.heat_resource_stack[
+                self._heat_resource.properties["network_id"]
+            ]

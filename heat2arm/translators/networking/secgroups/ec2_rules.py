@@ -47,42 +47,12 @@ class BaseEC2SecurityGroupRuleARMTranslator(BaseHeatARMTranslator):
     # reference to the SecurityGroup which this rule resource is targetting.
     _target_secgroup_field_name = ""
 
-    def get_variables(self):
-        """ get_variables returns the dict of all the required ARM
-        template variables for the EC2 security group.
-
-        It is no-op as no variables must be defined for translation.
-        """
-        return {}
-
-    def get_parameters(self):
-        """ get_parameters returns the dict of ARM template parameters
-        associated with the EC2 security group.
-
-        It is no-op as there usually are no parameters for
-        EC2 security group rules.
-        """
-        return {}
-
-    def get_dependencies(self):
-        """ get_dependencies returns a list of resources which this resource
-        depends on.
-
-        It is no-op as Azure security groups are fully stand-alone resources.
-        """
-        return []
-
-    def get_resource_data(self):
-        """ get_resource_data returns a list of all the options associated to
-        this resource which is directly serializable into JSON and used in the
-        resulting ARM template for this resource.
-        """
-        return []
-
     def update_context(self):
         """ update_context 'injects' the rule obtained from _get_rule into the
         data of the security group obtained from _get_target.
         """
+        super(BaseEC2SecurityGroupRuleARMTranslator, self).update_context()
+
         secgroup = self._context.get_arm_resource({
             "type": "Microsoft.Network/networkSecurityGroups",
             "name": "[variables('secGroupName_%s')]" % self._get_target(),
@@ -179,10 +149,10 @@ class BaseEC2SecurityGroupRuleARMTranslator(BaseHeatARMTranslator):
             )
 
         # if here; log a warning saying inference was attempted:
-        LOG.warning(
-            "'%s': 'CidrIp' not set on '%s'. Attempting to infer it from "
+        self._logger.warning(
+            "'CidrIp' not set on '%s'. Attempting to infer it from "
             "the target SecurityGroup '%s'.",
-            self, self._heat_resource_name, target_group_name
+            self._heat_resource_name, target_group_name
         )
 
         # then, fetch the target group and collect all of their Cidr fields:
@@ -208,10 +178,10 @@ class BaseEC2SecurityGroupRuleARMTranslator(BaseHeatARMTranslator):
             )
 
         # else, log and return the single possible cidr deduced:
-        LOG.warning(
-            "'%s': succesfully deduced that security group rule '%s' cidr is "
+        self._logger.warning(
+            "succesfully deduced that security group rule '%s' cidr is "
             " most likely '%s' based on the SecurityGroup it targets.",
-            self, self._heat_resource_name, list(cidrs)[0]
+            self._heat_resource_name, list(cidrs)[0]
         )
         return list(cidrs)[0]
 

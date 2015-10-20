@@ -27,7 +27,7 @@ from heat2arm.parser.common.function import Function
 from heat2arm.parser.common.functions.utils import is_homogeneous
 
 
-LOG = logging.getLogger("__heat2arm__")
+LOG = logging.getLogger("__heat2arm__.GetAttrFunction")
 
 
 class GetAttrFunction(Function):

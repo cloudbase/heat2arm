@@ -28,6 +28,9 @@ from heat2arm.translators.networking.floating_ips import (
     EC2eipARMTranslator,
     NeutronFloatingIPARMTranslator,
 )
+from heat2arm.translators.networking.loadbalancing import (
+    AWSLoadBalancerARMTranslator
+)
 from heat2arm.translators.networking.neutron_net import (
     NeutronSubnetARMTranslator,
     NeutronNetARMTranslator,

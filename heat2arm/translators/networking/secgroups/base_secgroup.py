@@ -39,15 +39,6 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
     # all rules require:
     _mandatory_rule_fields = []
 
-    def _get_rules(self):
-        """ _get_rules is a helper method which returns a list of all
-        the resulting ARM security group rules to be created
-        following the translation.
-
-        NOTE: it is stubbed and must be implemented in all inheriting classes.
-        """
-        return []
-
     def get_variables(self):
         """ get_variables returns the dict of all the required ARM
         template variables for the EC2 security group.
@@ -57,28 +48,13 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
                 self._make_var_name("secGroup"),
         }
 
-    def get_parameters(self):
-        """ get_parameters returns the dict of ARM template parameters
-        associated with the EC2 security group.
-
-        It is no-op as there usually are no parameters for
-        EC2 security groups.
-        """
-        return {}
-
-    def get_dependencies(self):
-        """ get_dependencies returns a list of resources which this resource
-        depends on.
-
-        It is no-op as Azure security groups are fully stand-alone resources.
-        """
-        return []
-
     def get_resource_data(self):
         """ get_resource_data returns a list of all the options associated to
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
+        super(BaseSecurityGroupARMTranslator, self).get_resource_data()
+
         return [{
             "apiVersion": CONF.arm_api_version,
             "type": self.arm_resource_type,
@@ -89,6 +65,15 @@ class BaseSecurityGroupARMTranslator(BaseHeatARMTranslator):
                 "securityRules": self._get_rules()
             }
         }]
+
+    def _get_rules(self):
+        """ _get_rules is a helper method which returns a list of all
+        the resulting ARM security group rules to be created
+        following the translation.
+
+        NOTE: it is stubbed and must be implemented in all inheriting classes.
+        """
+        return []
 
     def _validate_rules(self, rules):
         """ _validate_rules is a helper method which recieves a list of raw

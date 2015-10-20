@@ -18,14 +18,3 @@
     # python setup.py install
     $ heat2arm --in heat_template.yaml --out arm_template.json
 """
-
-import logging
-import sys
-
-
-LOGGER = logging.getLogger("__heat2arm__")
-STDOUTSH = logging.StreamHandler(sys.stderr)
-STDOUTSH.setFormatter(logging.Formatter("%(asctime)s - %(name)s -"
-                                        "%(levelname)s - %(message)s"))
-STDOUTSH.setLevel(logging.DEBUG)
-LOGGER.addHandler(STDOUTSH)

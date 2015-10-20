@@ -24,7 +24,7 @@ from heat2arm.parser.common.exceptions import (FunctionApplicationException,
 from heat2arm.parser.common.function import Function
 
 
-LOG = logging.getLogger("__heat2arm__")
+LOG = logging.getLogger("__heat2arm__.RefFunction")
 
 
 class RefFunction(Function):
@@ -103,7 +103,9 @@ class RefFunction(Function):
         # else, rock bottom:
         raise FunctionApplicationException(
             "Invalid referencing with '%s'. Reference to '%s' "
-            "could not be resolved." % (
+            "could not be resolved. If it is a value of significance, "
+            "please add it to the '[cfn|hot]_ref_exceptions' "
+            "configuration option." % (
                 self.name,
                 args
             )

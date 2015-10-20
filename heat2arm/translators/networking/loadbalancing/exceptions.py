@@ -14,19 +14,24 @@
 #    under the License.
 
 """
-    This module contains the translator for an AWS ScalingPolicy.
+    This module contains definitions for the base classes of all resource
+    translation Exceptions which may be raised.
 """
 
-from heat2arm.translators.base import BaseHeatARMTranslator
+
+from heat2arm.translators import exceptions
 
 
-class AWSScalingPolicyARMTranslator(BaseHeatARMTranslator):
-    """ AWSScalingPolicyARMTranslator is the translator for an
-    AWS::AutoScaling::ScalingPolicy.
-
-    The logic for processing ScalingPolicies is wholly included in the
-    AutoScalingGroup translator as the former is so dependant of the latter.
-    As a result, this translator is completely no-op.
+class LoadBalancerMissingFieldException(exceptions.MissingFieldException):
+    """ LoadBalancerMissingFieldException is raised whenever a given load
+    balancer definition has a missing a field which is mandatory for the
+    translation process.
     """
-    heat_resource_type = "AWS::AutoScaling::ScalingPolicy"
-    arm_resource_type = ""
+    pass
+
+
+class LoadBalancerInvalidFieldException(exceptions.InvalidFieldException):
+    """ LoadBalancerInvalidFieldException is raised whenever a given load
+    balancer definition's field contains an invalid value.
+    """
+    pass

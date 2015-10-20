@@ -32,6 +32,8 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         """ get_variables returns a dict of ARM template variables associated
         to the translation.
         """
+        super(BaseNICARMTranslator, self).get_variables()
+
         return {
             "nicName_%s" % self._heat_resource_name: self._heat_resource_name,
         }
@@ -57,6 +59,8 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         """ get_dependencies returns a list of all the dependencies
         of the NIC-like resource.
         """
+        super(BaseNICARMTranslator, self).get_dependencies()
+
         floating_ip_resource_name = self._get_floating_ip_resource_name()
 
         heat_net_resource = self._get_ref_network()
@@ -85,6 +89,8 @@ class BaseNICARMTranslator(BaseHeatARMTranslator):
         """ get_resource_data returns the list of data associated to resource
         which is directly serializable into ARM template format.
         """
+        super(BaseNICARMTranslator, self).get_resource_data()
+
         heat_net_resource = self._get_ref_network()
         if heat_net_resource:
             net_name = heat_net_resource.name

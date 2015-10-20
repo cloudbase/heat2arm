@@ -19,12 +19,13 @@
     which have already been declared.
 """
 
+import json
 import logging
 
 from heat2arm.config import CONF
 
 
-LOG = logging.getLogger("__heat2arm__")
+LOG = logging.getLogger("__heat2arm__.context")
 
 
 class Context(object):
@@ -60,6 +61,10 @@ class Context(object):
         # is required to be created for the deployment
         self.__new_virtual_network_required = False
 
+    def __str__(self):
+        """ __str__ simply returns the name of the class. """
+        return self.__class__.__name__
+
     def get_template_data(self):
         """ get_template_data returns all the data stored so far to be
         directly serialized into the resulting template.
@@ -83,16 +88,28 @@ class Context(object):
     def add_parameters(self, parameters):
         """ add_parameters adds the given parameters to the context.
         """
+        LOG.debug(
+            "'%s': adding parameters: %s",
+            self, json.dumps(parameters, indent=4)
+        )
         self.parameters.update(parameters)
 
     def add_variables(self, variables):
         """ add_variables adds the given dict of variables to the context.
         """
+        LOG.debug(
+            "'%s': adding variables: %s", self,
+            json.dumps(variables, indent=4)
+        )
         self.variables.update(variables)
 
     def add_resource(self, resource):
         """ add_resource adds a resource to the context's resources.
         """
+        LOG.debug(
+            "'%s': adding resource: %s", self,
+            json.dumps(resource, indent=4)
+        )
         self.resources.append(resource)
 
     def set_storage_account_required(self):
@@ -111,15 +128,29 @@ class Context(object):
         """ get_arm_resource returns the dict of the existing ARM resource
         which matches the provided properties.
         """
+        LOG.debug(
+            "'%s': asked to fetch arm resource matching: %s",
+            self, json.dumps(resource_props, indent=4)
+        )
+
         for res in self.resources:
             if all((k in res and res[k] == v) for k, v in
                    resource_props.items()):
+                LOG.debug(
+                    "'%s': found arm resource: %s",
+                    self, json.dumps(res, indent=4)
+                )
                 return res
 
     def get_heat_resources(self, resource_props):
         """ get_heat_resources returns the list of all Heat resource present in
         the template which satisfy the provided properties.
         """
+        LOG.debug(
+            "'%s': asked to fetch heat resources matching: %s",
+            self, json.dumps(resource_props, indent=4)
+        )
+
         resources = []
 
         for res in self.heat_resources:
@@ -128,13 +159,12 @@ class Context(object):
                    resource_props.items()):
                 resources.append(res)
 
-        return resources
+        LOG.debug(
+            "'%s': found heat resources: %s",
+            self, json.dumps(resources, indent=4)
+        )
 
-    def get_ref_heat_resource(self, heat_resource, property_name):
-        """ get_ref_heat_resource
-        """
-        resource_name = heat_resource.properties[property_name]
-        return self.heat_resource_stack[resource_name]
+        return resources
 
     def __set_storage_account_resource(self):
         """ __set_storage_account_resource is a helper method which sets the

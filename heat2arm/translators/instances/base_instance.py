@@ -41,6 +41,8 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         It returns a dict containing a user name and password parameters, and
         optionally the paramters for a VN and subnet if one is required.
         """
+        super(BaseInstanceARMTranslator, self).get_parameters()
+
         return {
             "adminUsername": {
                 "type": "string",
@@ -186,6 +188,8 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         """ get_dependencies returns the list of resources which are
         required by this resource.
         """
+        super(BaseInstanceARMTranslator, self).get_dependencies()
+
         depends_on = [
             "[concat('Microsoft.Storage/storageAccounts/', "
             "parameters('newStorageAccountName'))]"
@@ -203,6 +207,8 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         this resource which is directly serializable into JSON and used in the
         resulting ARM template for this resource.
         """
+        super(BaseInstanceARMTranslator, self).get_resource_data()
+
         return [{
             "apiVersion": CONF.arm_api_version,
             "type": self.arm_resource_type,
@@ -218,6 +224,8 @@ class BaseInstanceARMTranslator(BaseHeatARMTranslator):
         networkInterface required to attach this VM to the default VN (if
         applicable).
         """
+        super(BaseInstanceARMTranslator, self).update_context()
+
         if self._get_network_interfaces():
             # nothing to do; can return now:
             return

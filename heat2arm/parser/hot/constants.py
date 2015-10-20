@@ -22,6 +22,7 @@
 HEAT_TEMPLATE_FIELDS = {
     "description": "description",
     "parameters": "parameters",
+    "variables": "",
     "type": "type",
     "meta": "",
     "properties": "properties",

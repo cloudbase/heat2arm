@@ -62,6 +62,8 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
         """ get_variables returns the dict of all variables associated
         with the ARM definition of the resource.
         """
+        super(AWSAutoScalingGroupARMTranslator, self).get_variables()
+
         variables = {
             "autoscaleSettingsName_%s" % self._heat_resource_name:
                 "autoscaleSettings_%s" % self._heat_resource_name,
@@ -73,6 +75,8 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
         """ get_resource_data returns the dict of data associated with the
         definition of the resource in Azure.
         """
+        super(AWSAutoScalingGroupARMTranslator, self).get_resource_data()
+
         # NOTE: this must be done first in order to consistently
         # pre-obtain the target.
         target = self._get_target()
@@ -103,6 +107,7 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
         """ update_context adds all the necessary parameters, variables and
         resource data to the context required by this resource's translation.
         """
+        super(AWSAutoScalingGroupARMTranslator, self).update_context()
 
         # add an availabilitySet especially for the instance which is the
         # target of this AutoScalingGroup, if required:
@@ -192,10 +197,9 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
             # if the AutoScalingGroup happens to have more than one
             # AvailabilityZone; log the possible discrepancy:
             if len(avail_zones) > 1:
-                LOG.warn(
-                    "'%s': AutoScalingGroup '%s' has more than one "
+                self._logger.warning(
+                    "AutoScalingGroup '%s' has more than one "
                     "AvailabilityZone set. Defaulting to the first one: '%s'.",
-                    self,
                     self._heat_resource_name,
                     avail_zones[0]
                 )
@@ -317,11 +321,11 @@ class AWSAutoScalingGroupARMTranslator(BaseHeatARMTranslator):
         if not scaling_policies:
             # then, simply log a warning stating we are falling
             # back to defaults:
-            LOG.warning(
-                "'%s': AutoScalingGroup '%s' has no associated ScalingPolicies"
+            self._logger.warning(
+                "AutoScalingGroup '%s' has no associated ScalingPolicies"
                 " which can be translated into autoscaleSettings rules. "
                 "Falling back to using 'default_autoscaling_rules'.",
-                self, self._heat_resource_name
+                self._heat_resource_name
             )
 
             rules = CONF.default_autoscaleSettings_rules
