@@ -17,6 +17,8 @@
     Defines the base class for all the heat to ARM translators.
 """
 
+import logging
+
 
 class BaseHeatARMTranslator(object):
     """ BaseHeatARMTranslator is the base class for all heat to ARM translators
@@ -32,6 +34,7 @@ class BaseHeatARMTranslator(object):
         self._heat_resource = heat_resource
         self._heat_resource_name = self._heat_resource.name
         self._context = context
+        self._logger = logging.getLogger("__heat2arm__.%s" % (self,))
 
     def __str__(self):
         """ __str__ returns a formatted string containing the translator's
@@ -43,18 +46,21 @@ class BaseHeatARMTranslator(object):
         """ get_parameters returns the dict of ARM template parameters
         associated with the Heat template's resource translation.
         """
+        self._logger.debug("get_parameters was called.")
         return {}
 
     def get_variables(self):
         """ get_variables returns the dict of ARM template variables
         associated with the Heat template's resource translation.
         """
+        self._logger.debug("get_variables was called.")
         return {}
 
     def get_dependencies(self):
         """ get_dependencies returns the list of resources which are
         required by this resource.
         """
+        self._logger.debug("get_dependencies was called.")
         return []
 
     def get_resource_data(self):
@@ -62,6 +68,7 @@ class BaseHeatARMTranslator(object):
         representing the resource which can be directly serialized
         into the resulting ARM template format.
         """
+        self._logger.debug("get_resource_data was called.")
         return {}
 
     def update_context(self):
@@ -72,12 +79,15 @@ class BaseHeatARMTranslator(object):
         NOTE: it should be called after translate to ensure the resources which
         must be updated from the context have already been translated.
         """
-        pass
+        self._logger.debug("update_context was called.")
+        return
 
     def translate(self):
         """ translate is the main method of a translator; it adds all the
         required parameters, variables and resource data to the context.
         """
+        self._logger.debug("first translation pass initiated.")
+
         self._context.add_parameters(self.get_parameters())
         self._context.add_variables(self.get_variables())
         for resource in self.get_resource_data():

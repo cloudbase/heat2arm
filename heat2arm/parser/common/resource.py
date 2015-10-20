@@ -22,7 +22,7 @@ import logging
 
 from heat2arm.parser.common import exceptions
 
-LOG = logging.getLogger("__heat2arm__")
+LOG = logging.getLogger("__heat2arm__.Resource")
 
 
 class Resource(object):

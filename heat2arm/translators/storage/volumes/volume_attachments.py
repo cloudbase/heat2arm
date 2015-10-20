@@ -48,6 +48,8 @@ class BaseVolumeAttachmentTranslator(BaseHeatARMTranslator):
         """ update_context goes ahead and add the necessary volume declaration
         to the required instance.
         """
+        super(BaseVolumeAttachmentTranslator, self).update_context()
+
         volume_name = self._get_volume_name()
 
         res = self._context.get_arm_resource({

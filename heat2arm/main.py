@@ -19,6 +19,7 @@
 
 import argparse
 import json
+import logging
 import sys
 
 from heat2arm.config import CONF
@@ -42,21 +43,53 @@ def _parse_args():
     parser.add_argument("--config-file",
                         help="Path to an optional configuration file",
                         type=str)
+    parser.add_argument("--loglevel",
+                        help="The logging level to be used.",
+                        default="WARNING",
+                        type=str)
+    parser.add_argument("--logfile",
+                        help="The file to be used for logging.",
+                        type=argparse.FileType('w'),
+                        default=sys.stderr)
     return parser.parse_args()
+
+
+def _setup_logging(file, level):
+    """ _setup_logging is a helper method which sets up the logging
+    process to the given file and with the given level (as a string).
+    """
+    log_level = getattr(logging, level.upper(), None)
+    if not log_level:
+        raise Exception("Invalid log level '%s' provided.")
+
+    logger = logging.getLogger("__heat2arm__")
+    logger.setLevel(log_level)
+    stdoutsh = logging.StreamHandler(file)
+    stdoutsh.setFormatter(logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    ))
+    logger.addHandler(stdoutsh)
 
 
 def main():
     """ main is the entry point of the application. """
     args = _parse_args()
 
+    # first; check for a config file and load it:
     if args.config_file:
         CONF(["--config-file", args.config_file])
 
+    # setup logging:
+    _setup_logging(args.logfile, args.loglevel)
+
+    # read the contents of the template:
     heat_template_data = args.heat_template.read()
     args.heat_template.close()
 
+    # do the conversion:
     arm_template_data = engine.convert_template(heat_template_data)
 
+    # write out the result:
     args.arm_template.write(json.dumps(arm_template_data, indent=4))
     args.arm_template.close()
 

@@ -32,7 +32,7 @@ from heat2arm.translators import networking
 from heat2arm.translators import storage
 
 
-LOG = logging.getLogger("__heat2arm__")
+LOG = logging.getLogger("__heat2arm__.%s" % (__name__))
 
 # RESOURCE_TRANSLATORS is a list of all the resource translator
 # classes to be used within the translation process.
@@ -51,6 +51,7 @@ RESOURCE_TRANSLATORS = [
     networking.NeutronSubnetARMTranslator,
     networking.EC2eipAssocARMTranslator,
     networking.NeutronPortARMTranslator,
+    networking.AWSLoadBalancerARMTranslator,
     storage.CinderVolumeARMTranslator,
     storage.CinderVolumeAttachmentARMTranslator,
     storage.EBSVolumeARMTranslator,
@@ -83,8 +84,10 @@ def get_resource_translator(heat_resource, context):
     if res_trans:
         return res_trans(heat_resource, context)
     else:
-        LOG.warn('Could not find a corresponding ARM resource for Heat '
-                 'resource "%s"', heat_resource.type)
+        LOG.warning(
+            'Could not find a corresponding ARM resource for Heat '
+            'resource "%s"', heat_resource.type
+        )
 
 
 def get_arm_schema():
@@ -104,8 +107,15 @@ def get_arm_template(resources, context):
 
     # also, let all the resource translators apply any changes
     # to the context they require:
+    remembs = []
     for resource in resources:
-        resource.update_context()
+        try:
+            resource.update_context()
+        except:
+            remembs.append(resource)
+
+    for rem in remembs:
+        rem.update_context()
 
     template_data = context.get_template_data()
 

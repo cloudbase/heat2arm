@@ -32,6 +32,8 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         """ get_parameters returns a dict of all the parameters associated
         to the Neutron floating IP.
         """
+        super(BaseFloatingIPARMTranslator, self).get_parameters()
+
         return {
             "dnsNameForPublicIP_%s" % self._heat_resource_name: {
                 "type": "string",
@@ -55,6 +57,8 @@ class BaseFloatingIPARMTranslator(BaseHeatARMTranslator):
         respresenting the resource which can directly be serialized
         into the resulting ARM template format.
         """
+        super(BaseFloatingIPARMTranslator, self).get_resource_data
+
         return [{
             "apiVersion": CONF.arm_api_version,
             "type": "Microsoft.Network/publicIPAddresses",

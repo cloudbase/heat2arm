@@ -49,10 +49,9 @@ class EC2eipAssocARMTranslator(BaseNICARMTranslator):
         of the network which references this NIC-like resource.
         """
         if "NetworkInterfaceId" in self._heat_resource.properties:
-            return self._context.get_ref_heat_resource(
-                self._heat_resource,
-                "NetworkInterfaceId"
-            )
+            return self._context.heat_resource_stack[
+                self._heat_resource.properties["NetworkInterfaceId"]
+            ]
         else:
             # the resulting Azure network interface will be attached to the
             # default VN whose creation must be signaled here:

@@ -67,7 +67,7 @@ class EC2InstanceARMTranslator(BaseInstanceARMTranslator):
         super(EC2InstanceARMTranslator, self).update_context()
 
         res = self._context.get_arm_resource({
-            "type": self.heat_resource_type,
+            "type": self.arm_resource_type,
             "name": "[variables('vmName_%s')]" % self._heat_resource.name,
         })
 

@@ -41,6 +41,8 @@ class NeutronNetARMTranslator(BaseHeatARMTranslator):
     arm_resource_type = None
 
     def get_variables(self):
+        super(NeutronNetARMTranslator, self).get_variables()
+
         return {
             "virtualNetworkName_%s" % self._heat_resource_name:
                 self._heat_resource_name,
@@ -71,6 +73,8 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
         variables associated with the Neutron subnet.
 
         """
+        super(NeutronSubnetARMTranslator, self).get_variables()
+
         cidr = self._heat_resource.properties['cidr']
         return {
             "subNetAddressPrefix_%s" % self._heat_resource_name: cidr
@@ -81,9 +85,11 @@ class NeutronSubnetARMTranslator(BaseHeatARMTranslator):
         representing the subnet which can be directly serialized into
         the ARM template format.
         """
-        heat_net_resource = self._context.get_ref_heat_resource(
-            self._heat_resource, "network")
-        net_name = heat_net_resource.name
+        super(NeutronSubnetARMTranslator, self).get_resource_data()
+
+        net_name = self._context.heat_resource_stack[
+            self._heat_resource.properties["network"]
+        ].name
 
         return [{
             "apiVersion": CONF.arm_api_version,

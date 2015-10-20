@@ -49,6 +49,23 @@ directly start testing it on some of the provided sample templates:
 ::
   heat2arm --in samples/servers_in_new_neutron_net.yaml
 
+Checking logs:
+^^^^^^^^^^^^^^
+
+It is highly advisable to skim the logs after a translation run to review all
+warning messages.
+Logging options can be set using the `--logfile` and `--loglevel` arguments as follows:
+::
+  heat2arm --in samples/servers_in_new_neutron_net.yaml --logfile=./heat2arm.log --loglevel=WARNING
+
+By default, the converter will log only warnings to standard error.
+
+Raising issues:
+^^^^^^^^^^^^^^^
+
+When reporting an issue with the converter, please include a paste/link to
+the logs of the translation run with `--loglevel=debug` set.
+
 Moving forward:
 ^^^^^^^^^^^^^^^
 
